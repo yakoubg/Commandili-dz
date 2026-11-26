@@ -1,12 +1,19 @@
-// إخفاء شاشة الدخول
-window.addEventListener('load', () => {
+function hideIntro() {
   const overlay = document.getElementById('introOverlay');
-  setTimeout(() => overlay.classList.add('done'), 650);
+  if (overlay) {
+    overlay.classList.add('done');
+  }
+}
+
+window.addEventListener('load', () => {
+  setTimeout(hideIntro, 500);
 });
 
-// محرك الكانفاس: مسار شحن حي + مكعبات تطبيقات ثلاثية الأبعاد تستجيب للمؤشر
+// احتياط في حال تأخر حدث load
+setTimeout(hideIntro, 1800);
+
 const canvas = document.getElementById('stageCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 
 let width = 0;
 let height = 0;
@@ -16,12 +23,24 @@ let pointer = { x: 0.5, y: 0.45, targetX: 0.5, targetY: 0.45 };
 let activeStation = 0;
 let parcelProgress = 0.12;
 
+function roundRectPath(c, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + radius, y);
+  c.arcTo(x + w, y, x + w, y + h, radius);
+  c.arcTo(x + w, y + h, x, y + h, radius);
+  c.arcTo(x, y + h, x, y, radius);
+  c.arcTo(x, y, x + w, y, radius);
+  c.closePath();
+}
+
 function resize() {
-  width = window.innerWidth;
-  height = window.innerHeight;
+  if (!canvas || !ctx) return;
+  width = window.innerWidth || document.documentElement.clientWidth || 800;
+  height = window.innerHeight || document.documentElement.clientHeight || 600;
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
@@ -29,18 +48,18 @@ window.addEventListener('resize', resize);
 resize();
 
 document.addEventListener('mousemove', (e) => {
+  if (!width || !height) return;
   pointer.targetX = e.clientX / width;
   pointer.targetY = e.clientY / height;
 }, { passive: true });
 
 document.addEventListener('touchmove', (e) => {
-  if (e.touches.length > 0) {
+  if (e.touches && e.touches.length > 0 && width && height) {
     pointer.targetX = e.touches[0].clientX / width;
     pointer.targetY = e.touches[0].clientY / height;
   }
 }, { passive: true });
 
-// مكعبات التطبيقات الطائرة
 const appCubes = [
   { label: 'AE', sub: 'AliExpress', color: '#ff5a1f', bx: 0.12, by: 0.24, size: 54, phase: 0.0 },
   { label: 'T', sub: 'Temu', color: '#fb7701', bx: 0.86, by: 0.22, size: 52, phase: 1.4 },
@@ -49,7 +68,6 @@ const appCubes = [
   { label: 'DZ', sub: 'Poste DZ', color: '#10b981', bx: 0.50, by: 0.86, size: 46, phase: 5.2 }
 ];
 
-// نقاط المحطات الأربع على المسار الموجي
 function getRoutePoint(t) {
   const startX = width * 0.14;
   const endX = width * 0.86;
@@ -68,25 +86,20 @@ function drawIsoCube(x, y, size, tilt, color, label, sub) {
   const half = size * 0.5;
   const depth = size * 0.24;
 
-  // ظل ناعم
   ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
   ctx.beginPath();
   ctx.ellipse(0, half + depth + 8, half * 0.85, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // الوجه الأمامي للمكعب
-  ctx.fillStyle = 'rgba(15, 31, 44, 0.86)';
+  ctx.fillStyle = 'rgba(15, 31, 44, 0.88)';
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
   ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.roundRect(-half, -half, size, size, 12);
+  roundRectPath(ctx, -half, -half, size, size, 12);
   ctx.fill();
   ctx.stroke();
 
-  // شارة التطبيق العلوية
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(-14, -half + 8, 28, 22, 7);
+  roundRectPath(ctx, -14, -half + 8, 28, 22, 7);
   ctx.fill();
 
   ctx.fillStyle = '#ffffff';
@@ -95,7 +108,6 @@ function drawIsoCube(x, y, size, tilt, color, label, sub) {
   ctx.textBaseline = 'middle';
   ctx.fillText(label, 0, -half + 19);
 
-  // اسم المنصة
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '700 10px Cairo, sans-serif';
   ctx.fillText(sub, 0, 12);
@@ -104,13 +116,17 @@ function drawIsoCube(x, y, size, tilt, color, label, sub) {
 }
 
 function render(now) {
-  const tSec = now * 0.001;
+  if (!ctx || width <= 0 || height <= 0) {
+    requestAnimationFrame(render);
+    return;
+  }
+
+  const tSec = (now || 0) * 0.001;
   pointer.x += (pointer.targetX - pointer.x) * 0.06;
   pointer.y += (pointer.targetY - pointer.y) * 0.06;
 
   ctx.clearRect(0, 0, width, height);
 
-  // إضاءة خلفية متدرجة تتبع المؤشر
   const grad = ctx.createRadialGradient(
     width * pointer.x,
     height * pointer.y,
@@ -125,7 +141,6 @@ function render(now) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  // رسم المسار المنحني بين المحطات
   ctx.save();
   ctx.beginPath();
   const steps = 80;
@@ -134,13 +149,12 @@ function render(now) {
     if (i === 0) ctx.moveTo(p.x, p.y);
     else ctx.lineTo(p.x, p.y);
   }
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
   ctx.lineWidth = 2.5;
   ctx.setLineDash([7, 7]);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // رسم نقاط المحطات الأربع
   const stationPositions = [0.05, 0.36, 0.68, 0.96];
   stationPositions.forEach((pos, idx) => {
     const pt = getRoutePoint(pos);
@@ -159,7 +173,6 @@ function render(now) {
     }
   });
 
-  // تحديث موقع الطرد المتحرك على المسار
   if (animEnabled) {
     parcelProgress += 0.0018;
     if (parcelProgress > 1) parcelProgress = 0;
@@ -170,27 +183,22 @@ function render(now) {
   ctx.translate(parcelPt.x, parcelPt.y);
   ctx.rotate(Math.sin(tSec * 3) * 0.14);
 
-  // هالة الطرد
   ctx.fillStyle = 'rgba(255, 106, 26, 0.25)';
   ctx.beginPath();
   ctx.arc(0, 0, 22, 0, Math.PI * 2);
   ctx.fill();
 
-  // صندوق الطرد
   ctx.fillStyle = '#ff6a1a';
   ctx.strokeStyle = '#ffd0b0';
   ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(-13, -13, 26, 26, 6);
+  roundRectPath(ctx, -13, -13, 26, 26, 6);
   ctx.fill();
   ctx.stroke();
 
-  // شريط الإغلاق
   ctx.fillStyle = '#fff';
   ctx.fillRect(-2, -13, 4, 26);
   ctx.restore();
 
-  // رسم المكعبات الطائرة لتطبيقات ومنصات الخدمة
   appCubes.forEach((c) => {
     const floatY = Math.sin(tSec * 1.4 + c.phase) * 14;
     const floatX = Math.cos(tSec * 1.1 + c.phase) * 10;
@@ -215,7 +223,6 @@ function render(now) {
 
 requestAnimationFrame(render);
 
-// تبديل المحطات التفاعلية
 const stations = [
   {
     badge: 'المحطة 01 / 04',
@@ -261,14 +268,14 @@ chips.forEach((chip) => {
   });
 });
 
-// زر إيقاف/تشغيل الحركة
 const toggleStageBtn = document.getElementById('toggleStageBtn');
-toggleStageBtn.addEventListener('click', () => {
-  animEnabled = !animEnabled;
-  toggleStageBtn.textContent = animEnabled ? 'إيقاف/تشغيل الحركة' : 'تشغيل الحركة';
-});
+if (toggleStageBtn) {
+  toggleStageBtn.addEventListener('click', () => {
+    animEnabled = !animEnabled;
+    toggleStageBtn.textContent = animEnabled ? 'إيقاف/تشغيل الحركة' : 'تشغيل الحركة';
+  });
+}
 
-// منطق الحاسبة الفورية
 const storeSelect = document.getElementById('storeSelect');
 const usdInput = document.getElementById('usdInput');
 const rateInput = document.getElementById('rateInput');
@@ -281,63 +288,68 @@ const totalDzdOut = document.getElementById('totalDzdOut');
 const commissionBadge = document.getElementById('commissionBadge');
 
 function updateCalc() {
-  const usd = Math.max(0, parseFloat(usdInput.value) || 0);
-  const rate = Math.max(1, parseFloat(rateInput.value) || 250);
-  const isFreeFee = firstTenToggle.checked;
+  const usd = Math.max(0, parseFloat(usdInput && usdInput.value) || 0);
+  const rate = Math.max(1, parseFloat(rateInput && rateInput.value) || 250);
+  const isFreeFee = Boolean(firstTenToggle && firstTenToggle.checked);
 
-  // العمولة: 1 دولار لكل 10 دولار (10%) أو 0% لعرض أول 10 زبائن
   const feeUsd = isFreeFee ? 0 : usd * 0.10;
   const productDzd = Math.round(usd * rate);
   const feeDzd = Math.round(feeUsd * rate);
   const totalDzd = productDzd + feeDzd;
 
-  productDzdOut.textContent = `${productDzd.toLocaleString('en-US')} دج`;
-  feeDzdOut.textContent = isFreeFee ? '0 دج (عرض 10)' : `${feeDzd.toLocaleString('en-US')} دج`;
-  totalDzdOut.textContent = `${totalDzd.toLocaleString('en-US')} دج`;
+  if (productDzdOut) productDzdOut.textContent = `${productDzd.toLocaleString('en-US')} دج`;
+  if (feeDzdOut) feeDzdOut.textContent = isFreeFee ? '0 دج (عرض 10)' : `${feeDzd.toLocaleString('en-US')} دج`;
+  if (totalDzdOut) totalDzdOut.textContent = `${totalDzd.toLocaleString('en-US')} دج`;
 
-  if (isFreeFee) {
-    commissionBadge.textContent = '0% عمولة • عرض الافتتاح';
-    commissionBadge.style.color = '#34d399';
-    commissionBadge.style.borderColor = 'rgba(52, 211, 153, 0.45)';
-    commissionBadge.style.background = 'rgba(52, 211, 153, 0.12)';
-  } else {
-    commissionBadge.textContent = 'عمولة 1$ / 10$';
-    commissionBadge.style.color = '#ffb380';
-    commissionBadge.style.borderColor = 'rgba(255, 106, 26, 0.4)';
-    commissionBadge.style.background = 'rgba(255, 106, 26, 0.18)';
+  if (commissionBadge) {
+    if (isFreeFee) {
+      commissionBadge.textContent = '0% عمولة • عرض الافتتاح';
+      commissionBadge.style.color = '#34d399';
+      commissionBadge.style.borderColor = 'rgba(52, 211, 153, 0.45)';
+      commissionBadge.style.background = 'rgba(52, 211, 153, 0.12)';
+    } else {
+      commissionBadge.textContent = 'عمولة 1$ / 10$';
+      commissionBadge.style.color = '#ffb380';
+      commissionBadge.style.borderColor = 'rgba(255, 106, 26, 0.4)';
+      commissionBadge.style.background = 'rgba(255, 106, 26, 0.18)';
+    }
   }
 }
 
 [usdInput, rateInput, firstTenToggle].forEach((el) => {
+  if (!el) return;
   el.addEventListener('input', updateCalc);
   el.addEventListener('change', updateCalc);
 });
 
 updateCalc();
 
-// نسخ بطاقة الطلب
 const copyBtn = document.getElementById('copyBtn');
 const copyToast = document.getElementById('copyToast');
 
-copyBtn.addEventListener('click', () => {
-  const usd = Math.max(0, parseFloat(usdInput.value) || 0);
-  const rate = Math.max(1, parseFloat(rateInput.value) || 250);
-  const isFreeFee = firstTenToggle.checked;
-  const feeUsd = isFreeFee ? 0 : usd * 0.10;
-  const totalDzd = Math.round((usd + feeUsd) * rate);
-  const url = linkInput.value.trim() || '(سأرسل الرابط هنا)';
+if (copyBtn) {
+  copyBtn.addEventListener('click', () => {
+    const usd = Math.max(0, parseFloat(usdInput && usdInput.value) || 0);
+    const rate = Math.max(1, parseFloat(rateInput && rateInput.value) || 250);
+    const isFreeFee = Boolean(firstTenToggle && firstTenToggle.checked);
+    const feeUsd = isFreeFee ? 0 : usd * 0.10;
+    const totalDzd = Math.round((usd + feeUsd) * rate);
+    const url = (linkInput && linkInput.value.trim()) || '(سأرسل الرابط هنا)';
+    const store = (storeSelect && storeSelect.value) || 'AliExpress';
 
-  const text =
+    const text =
 `طلب جديد عبر Commandili DZ (كومنديلي) 🇩🇿
-• المنصة: ${storeSelect.value}
+• المنصة: ${store}
 • الرابط: ${url}
 • سعر المنتج: ${usd.toFixed(2)}$
 • النظام: ${isFreeFee ? 'عرض أول 10 زبائن (بدون عمولة 0%)' : 'عمولة 1$ لكل 10$'}
 • الإجمالي التقريبي عبر BaridiMob: ${totalDzd.toLocaleString('en-US')} دج`;
 
-  navigator.clipboard.writeText(text).then(() => {
-    copyToast.classList.add('show');
-    setTimeout(() => copyToast.classList.remove('show'), 3500);
+    navigator.clipboard.writeText(text).then(() => {
+      if (copyToast) {
+        copyToast.classList.add('show');
+        setTimeout(() => copyToast.classList.remove('show'), 3500);
+      }
+    });
   });
-});
-                     
+    }
