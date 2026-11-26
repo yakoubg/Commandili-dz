@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Commandili DZ | كومنديلي — الشراء من AliExpress و Temu بالدينار</title>
+  <title>Commandili DZ | كومنديلي — مسار الشحن والحاسبة التفاعلية</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -11,238 +11,156 @@
 </head>
 <body>
 
-  <!-- شاشة التحميل الاحترافية -->
-  <div id="preloader" class="preloader">
-    <div class="loader-box">
-      <div class="loader-ring"></div>
-      <div class="loader-brand">Commandili <span>DZ</span></div>
-      <div class="loader-sub">كومنديلي • جاري تجهيز التجربة...</div>
+  <!-- شاشة دخول سريعة وأنيقة -->
+  <div id="introOverlay" class="intro-overlay" aria-hidden="true">
+    <div class="intro-core">
+      <div class="intro-orbit"></div>
+      <div class="intro-logo">Commandili <span>DZ</span></div>
+      <div class="intro-ar">كومنديلي • جسر الطلبات الذكي</div>
     </div>
   </div>
 
-  <!-- شريط تقدم التمرير العلوي -->
-  <div id="scrollProgress" class="scroll-progress"></div>
+  <!-- لوحة Canvas التفاعلية الحية -->
+  <canvas id="stageCanvas" class="stage-canvas"></canvas>
 
-  <!-- الخلفية والمكعبات الطائرة لتطبيقات ومنصات الخدمة -->
-  <div class="ambient-bg" id="ambientBg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-
-    <div class="floating-cube cube-1" data-speed="0.025">
-      <span class="cube-badge ali">AE</span>
-      <small>AliExpress</small>
-    </div>
-    <div class="floating-cube cube-2" data-speed="-0.03">
-      <span class="cube-badge temu">T</span>
-      <small>Temu</small>
-    </div>
-    <div class="floating-cube cube-3" data-speed="0.02">
-      <span class="cube-badge baridi">BM</span>
-      <small>BaridiMob</small>
-    </div>
-    <div class="floating-cube cube-4" data-speed="-0.022">
-      <span class="cube-badge track">TI</span>
-      <small>TrackIt</small>
-    </div>
-    <div class="floating-cube cube-5" data-speed="0.018">
-      <span class="cube-badge post">DZ</span>
-      <small>Poste DZ</small>
-    </div>
-  </div>
-
-  <header>
-    <div class="nav-container">
-      <a href="#" class="brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-            <path d="m3.3 7 8.7 5 8.7-5"/>
-            <path d="M12 22V12"/>
-          </svg>
-        </div>
-        <div>
-          <div class="brand-title">Commandili <span>DZ</span></div>
-          <span class="brand-sub">كومنديلي • وساطة الشراء بالدينار</span>
-        </div>
+  <!-- طبقة الواجهة العائمة فوق المشهد -->
+  <div class="hud-shell">
+    <header class="top-bar">
+      <a href="#top" class="brand-pill">
+        <span class="pulse-dot"></span>
+        <span>Commandili <strong>DZ</strong> | كومنديلي</span>
       </a>
 
-      <nav class="nav-links">
-        <a href="#calculator">الحاسبة</a>
-        <a href="#steps">طريقة الطلب</a>
-        <a href="#customs">دليل الجمارك</a>
-        <a href="#calculator" class="cta-mini">احسب طلبك</a>
-      </nav>
-    </div>
-  </header>
+      <div class="top-actions">
+        <button type="button" id="toggleStageBtn" class="ghost-btn">إيقاف/تشغيل الحركة</button>
+        <a href="#calcSection" class="solid-btn">احسب طلبك الآن</a>
+      </div>
+    </header>
 
-  <main class="container">
-    <!-- قسم الترحيب -->
-    <section class="hero reveal">
-      <div class="promo-pill">🎉 عرض الافتتاح: أول 10 طلبات بدون عمولة (0%)</div>
-      <h1>اطلب من <span>AliExpress و Temu</span><br>بالدينار الجزائري بكل سهولة</h1>
-      <p>بلا بطاقة بنكية وبكل شفافية: احسب تكلفة طلبك فوراً، خلّص عبر <strong>BaridiMob</strong>، واستلم طردك في مكتب البريد ببلديتك مع تتبع مباشر عبر <strong>TrackIt</strong>.</p>
+    <!-- القسم الرئيسي التفاعلي -->
+    <section id="top" class="hero-stage">
+      <div class="hero-copy">
+        <div class="tag-line">⚡ محاكاة حية لمسار الطلب • AliExpress & Temu → الجزائر</div>
+        <h1>اطلب ما تريد من الخارج،<br>و<span>شاهد طردك</span> يقطع الطريق حتى بريدك</h1>
+        <p>بدون بطاقة بنكية. دفع واضح بالدينار عبر <strong>BaridiMob</strong>، عمولة شفافة <strong>1$ لكل 10$</strong> (أو <strong>0% لأول 10 طلبات</strong>)، ومتابعة خطوة بخطوة عبر <strong>TrackIt</strong>.</p>
+
+        <div class="station-pills" id="stationPills">
+          <button type="button" class="station-chip active" data-station="0">1. اختيار الطلب</button>
+          <button type="button" class="station-chip" data-station="1">2. الدفع BaridiMob</button>
+          <button type="button" class="station-chip" data-station="2">3. الشحن والجمارك</button>
+          <button type="button" class="station-chip" data-station="3">4. تتبع TrackIt والبريد</button>
+        </div>
+      </div>
+
+      <!-- بطاقة شرح المحطة النشطة -->
+      <aside class="station-card" id="stationCard">
+        <div class="station-step-badge" id="stationBadge">المحطة 01 / 04</div>
+        <h2 id="stationTitle">إرسال الرابط وتأكيد التفاصيل</h2>
+        <p id="stationDesc">ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.</p>
+        <div class="station-meta">
+          <span>الدفع: <strong>BaridiMob</strong></span>
+          <span>التتبع: <strong>TrackIt</strong></span>
+        </div>
+      </aside>
     </section>
 
-    <!-- الحاسبة التفاعلية -->
-    <section id="calculator" class="calc-grid reveal">
-      <div class="card tilt-card">
-        <div class="card-header">
-          <h2>🧮 حاسبة التكلفة والعمولة</h2>
-          <span class="badge-accent">عمولة 1$ لكل 10$</span>
+    <!-- قسم الحاسبة التفاعلية المتزامنة مع المشهد -->
+    <section id="calcSection" class="calc-section">
+      <div class="calc-panel">
+        <div class="panel-head">
+          <h2>حاسبة كومنديلي الذكية</h2>
+          <span class="commission-pill" id="commissionBadge">عمولة 1$ / 10$</span>
         </div>
 
-        <div class="form-group">
-          <label for="platform">المتجر الإلكتروني</label>
-          <select id="platform">
-            <option value="AliExpress">AliExpress</option>
-            <option value="Temu">Temu</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="productPrice">سعر المنتج مع الشحن (بالدولار $)</label>
-          <div class="input-wrap">
-            <input type="number" id="productPrice" min="0" step="0.01" placeholder="مثال: 15.50" value="10" />
-            <span class="currency-tag">USD $</span>
+        <div class="field-row">
+          <div class="field">
+            <label for="storeSelect">المنصة</label>
+            <select id="storeSelect">
+              <option value="AliExpress">AliExpress</option>
+              <option value="Temu">Temu</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="usdInput">سعر المنتج + الشحن ($)</label>
+            <input type="number" id="usdInput" min="0" step="0.01" value="20" />
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="exchangeRate">سعر الصرف المعتمد (1$ بالدينار)</label>
-          <div class="input-wrap">
-            <input type="number" id="exchangeRate" min="100" step="1" value="250" />
-            <span class="currency-tag">DZD</span>
+        <div class="field-row">
+          <div class="field">
+            <label for="rateInput">سعر الصرف (دج / 1$)</label>
+            <input type="number" id="rateInput" min="100" step="1" value="250" />
+          </div>
+          <div class="field">
+            <label for="linkInput">رابط المنتج (اختياري)</label>
+            <input type="url" id="linkInput" placeholder="https://..." />
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="productUrl">رابط المنتج (اختياري لتجهيز رسالة الطلب)</label>
-          <input type="url" id="productUrl" placeholder="https://www.aliexpress.com/item/..." />
-        </div>
-
-        <label class="promo-toggle" for="promoCheck">
+        <label class="vip-switch" for="firstTenToggle">
           <div>
-            <strong class="promo-title">تفعيل عرض أول 10 زبائن (0% عمولة)</strong>
-            <div class="promo-desc">إعفاء كامل من عمولة الخدمة في عرض الافتتاح</div>
+            <strong>عرض الافتتاح: أول 10 زبائن بدون عمولة (0%)</strong>
+            <small>إلغاء كامل للعمولة لتجربة الخدمة بسهولة</small>
           </div>
-          <input type="checkbox" id="promoCheck" />
+          <input type="checkbox" id="firstTenToggle" />
         </label>
+
+        <div class="summary-strip">
+          <div class="summary-item">
+            <span>قيمة المنتج</span>
+            <strong id="productDzdOut">5,000 دج</strong>
+          </div>
+          <div class="summary-item">
+            <span>العمولة</span>
+            <strong id="feeDzdOut">500 دج</strong>
+          </div>
+          <div class="summary-item highlight">
+            <span>الإجمالي للدفع</span>
+            <strong id="totalDzdOut">5,500 دج</strong>
+          </div>
+        </div>
+
+        <button type="button" id="copyBtn" class="copy-order-btn">
+          نسخ بطاقة الطلب لإرسالها في الخاص
+        </button>
+        <div id="copyToast" class="copy-toast">تم نسخ تفاصيل الطلب بنجاح — الصقها في رسائل الصفحة</div>
       </div>
 
-      <div class="card result-box tilt-card">
-        <div>
-          <div class="card-header">
-            <h2>📊 ملخص الحساب</h2>
-            <span id="statusBadge" class="status-badge">التسعيرة العادية</span>
-          </div>
+      <!-- دليل الجمارك السريع -->
+      <div class="rules-panel">
+        <h3>ضوابط الوصول السلس للطرود</h3>
+        <ul class="rules-list">
+          <li>
+            <span class="dot ok"></span>
+            <div>
+              <strong>طابع شخصي واضح</strong>
+              <p>منتجات للاستعمال الشخصي أو العائلي دون تكرار تجاري مفرط لنفس القطعة.</p>
+            </div>
+          </li>
+          <li>
+            <span class="dot warn"></span>
+            <div>
+              <strong>حدود القيمة والوزن</strong>
+              <p>الالتزام بالحدود المعتمدة للطرود الشخصية في الجمارك والبريد لتفادي أي تأخير.</p>
+            </div>
+          </li>
+          <li>
+            <span class="dot stop"></span>
+            <div>
+              <strong>ممنوعات حساسة</strong>
+              <p>الدرون، أجهزة التجسس، الأسلحة البيضاء، المواد القابلة للاشتعال، والسلع المستعملة.</p>
+            </div>
+          </li>
+        </ul>
 
-          <div class="breakdown-row">
-            <span>سعر المنتج بالدولار:</span>
-            <strong id="resUsd">10.00 $</strong>
-          </div>
-          <div class="breakdown-row">
-            <span>قيمة المنتج بالدينار:</span>
-            <strong id="resProductDzd">2,500 دج</strong>
-          </div>
-          <div class="breakdown-row">
-            <span>عمولة الخدمة (1$ لكل 10$):</span>
-            <strong id="resCommission" class="accent-text">1.00 $ (250 دج)</strong>
-          </div>
-        </div>
-
-        <div>
-          <div class="total-panel">
-            <div class="total-label">المبلغ الإجمالي للدفع عبر BaridiMob</div>
-            <div class="total-amount" id="resTotalDzd">2,750 دج</div>
-          </div>
-
-          <button class="btn-primary" id="copyOrderBtn" type="button">
-            <span>📋 نسخ تفاصيل الطلب لإرسالها في الخاص</span>
-          </button>
-          <div class="copy-feedback" id="copyFeedback">✓ تم نسخ رسالة الطلب! الصقها في رسائل صفحتنا على فيسبوك</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- خطوات الطلب -->
-    <section id="steps" class="reveal">
-      <div class="section-title">
-        <h2>كيف تطلب مع Commandili DZ؟</h2>
-        <p>أربع خطوات واضحة من اختيار المنتج حتى استلامه في بريد بلديتك</p>
-      </div>
-
-      <div class="steps-grid">
-        <div class="step-card tilt-card">
-          <div class="step-num">1</div>
-          <h3>أرسل رابط المنتج</h3>
-          <p>انسخ رابط المنتج من AliExpress أو Temu وأرسله لنا في رسالة خاصة على الصفحة.</p>
-        </div>
-
-        <div class="step-card tilt-card">
-          <div class="step-num">2</div>
-          <h3>احسب التكلفة</h3>
-          <p>استخدم الحاسبة أعلاه لمعرفة السعر بالدينار والعمولة الواضحة (1$ لكل 10$).</p>
-        </div>
-
-        <div class="step-card tilt-card">
-          <div class="step-num">3</div>
-          <h3>ادفع عبر BaridiMob</h3>
-          <p>بعد تأكيد توفر المنتج، قم بتحويل المبلغ بالدينار بسهولة عبر تطبيق BaridiMob.</p>
-        </div>
-
-        <div class="step-card tilt-card">
-          <div class="step-num">4</div>
-          <h3>استلم وتابع طردك</h3>
-          <p>نزودك برقم التتبع لمتابعة الشحنة عبر TrackIt حتى وصولها لمكتب البريد في بلديتك.</p>
+        <div class="footnote">
+          الاستلام يتم عبر <strong>مكتب البريد في بلديتك</strong> مع متابعة رقم الطرد عبر <strong>TrackIt</strong>.
         </div>
       </div>
     </section>
-
-    <!-- دليل الجمارك التفاعلي -->
-    <section id="customs" class="reveal">
-      <div class="section-title">
-        <h2>📋 دليل الجمارك والطرود البريدية</h2>
-        <p>معلومات مختصرة لتفادي حجز الطرد وضمان وصوله بسلاسة</p>
-      </div>
-
-      <div class="accordion">
-        <div class="acc-item active">
-          <button class="acc-btn" type="button">
-            <span>✅ ما هي الطرود والسلع المسموح بطلبها؟</span>
-            <span class="acc-icon">+</span>
-          </button>
-          <div class="acc-content">
-            تُقبل المنتجات الموجهة للاستعمال الشخصي أو العائلي العادي (ملابس جديدة، إكسسوارات، مستلزمات يومية وأدوات بسيطة)، مع الحرص على عدم تكرار نفس القطعة بكميات كبيرة في طرد واحد حتى لا تُصنّف كنشاط تجاري.
-          </div>
-        </div>
-
-        <div class="acc-item">
-          <button class="acc-btn" type="button">
-            <span>🚫 ما هي السلع الممنوعة أو الحساسة جمركياً؟</span>
-            <span class="acc-icon">+</span>
-          </button>
-          <div class="acc-content">
-            يُمنع طلب طائرات الدرون، أجهزة التجسس أو التصوير الخفي، الأسلحة البيضاء والأدوات الحادة، المواد القابلة للاشتعال أو الخطرة، والسلع المستعملة (مثل الهواتف المستعملة) أو المقلدة.
-          </div>
-        </div>
-
-        <div class="acc-item">
-          <button class="acc-btn" type="button">
-            <span>📏 ما هو الحد الأقصى لقيمة ووزن الطرد الشخصي؟</span>
-            <span class="acc-icon">+</span>
-          </button>
-          <div class="acc-content">
-            يجب أن يبقى الطرد في إطار الاستعمال الشخصي وغير التجاري (تُعتمد في الأنظمة الجمركية عتبات 50,000 دج للإعفاء/الضريبة الجزافية و100,000 دج كسقف للطابع غير التجاري)، ووزن الطرود البريدية العادية يكون ضمن حدود البريد المعتمدة (عادة حتى 30 كغ).
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>© 2026 <strong>Commandili DZ كومنديلي</strong> — خدمة الوساطة للشراء من AliExpress و Temu في الجزائر 🇩🇿</p>
-  </footer>
+  </div>
 
   <script src="script.js"></script>
 </body>
-</html>
+                                     </html>
+                                         
