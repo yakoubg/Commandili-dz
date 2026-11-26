@@ -1,164 +1,343 @@
-// إخفاء شاشة التحميل بعد اكتمال التحميل
+// إخفاء شاشة الدخول
 window.addEventListener('load', () => {
-  const preloader = document.getElementById('preloader');
-  setTimeout(() => {
-    preloader.classList.add('hidden');
-  }, 550);
+  const overlay = document.getElementById('introOverlay');
+  setTimeout(() => overlay.classList.add('done'), 650);
 });
 
-// شريط تقدم التمرير وتحريك المكعبات الطائرة مع المؤشر
-const scrollProgress = document.getElementById('scrollProgress');
-const floatingCubes = document.querySelectorAll('.floating-cube');
+// محرك الكانفاس: مسار شحن حي + مكعبات تطبيقات ثلاثية الأبعاد تستجيب للمؤشر
+const canvas = document.getElementById('stageCanvas');
+const ctx = canvas.getContext('2d');
 
-window.addEventListener('scroll', () => {
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-  scrollProgress.style.width = `${progress}%`;
-}, { passive: true });
+let width = 0;
+let height = 0;
+let dpr = Math.min(window.devicePixelRatio || 1, 2);
+let animEnabled = true;
+let pointer = { x: 0.5, y: 0.45, targetX: 0.5, targetY: 0.45 };
+let activeStation = 0;
+let parcelProgress = 0.12;
+
+function resize() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener('resize', resize);
+resize();
 
 document.addEventListener('mousemove', (e) => {
-  const cx = (e.clientX / window.innerWidth - 0.5) * 2;
-  const cy = (e.clientY / window.innerHeight - 0.5) * 2;
-
-  floatingCubes.forEach((cube) => {
-    const speed = parseFloat(cube.dataset.speed) || 0.02;
-    const tx = cx * 650 * speed;
-    const ty = cy * 650 * speed;
-    cube.style.marginLeft = `${tx}px`;
-    cube.style.marginTop = `${ty}px`;
-  });
+  pointer.targetX = e.clientX / width;
+  pointer.targetY = e.clientY / height;
 }, { passive: true });
 
-// تأثير إمالة خفيفة للبطاقات عند تحريك المؤشر
-document.querySelectorAll('.tilt-card').forEach((card) => {
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    const rotateX = (-y * 6).toFixed(2);
-    const rotateY = (x * 6).toFixed(2);
-    card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-3px)`;
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 0) {
+    pointer.targetX = e.touches[0].clientX / width;
+    pointer.targetY = e.touches[0].clientY / height;
+  }
+}, { passive: true });
+
+// مكعبات التطبيقات الطائرة
+const appCubes = [
+  { label: 'AE', sub: 'AliExpress', color: '#ff5a1f', bx: 0.12, by: 0.24, size: 54, phase: 0.0 },
+  { label: 'T', sub: 'Temu', color: '#fb7701', bx: 0.86, by: 0.22, size: 52, phase: 1.4 },
+  { label: 'BM', sub: 'BaridiMob', color: '#eab308', bx: 0.16, by: 0.72, size: 50, phase: 2.7 },
+  { label: 'TI', sub: 'TrackIt', color: '#0ea5e9', bx: 0.84, by: 0.68, size: 50, phase: 4.1 },
+  { label: 'DZ', sub: 'Poste DZ', color: '#10b981', bx: 0.50, by: 0.86, size: 46, phase: 5.2 }
+];
+
+// نقاط المحطات الأربع على المسار الموجي
+function getRoutePoint(t) {
+  const startX = width * 0.14;
+  const endX = width * 0.86;
+  const baseY = height * 0.54 + (pointer.y - 0.5) * 45;
+  const x = startX + (endX - startX) * t;
+  const wave = Math.sin(t * Math.PI * 2) * (Math.min(width, height) * 0.08);
+  const y = baseY - wave;
+  return { x, y };
+}
+
+function drawIsoCube(x, y, size, tilt, color, label, sub) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+
+  const half = size * 0.5;
+  const depth = size * 0.24;
+
+  // ظل ناعم
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, half + depth + 8, half * 0.85, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // الوجه الأمامي للمكعب
+  ctx.fillStyle = 'rgba(15, 31, 44, 0.86)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(-half, -half, size, size, 12);
+  ctx.fill();
+  ctx.stroke();
+
+  // شارة التطبيق العلوية
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-14, -half + 8, 28, 22, 7);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 11px Cairo, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, 0, -half + 19);
+
+  // اسم المنصة
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '700 10px Cairo, sans-serif';
+  ctx.fillText(sub, 0, 12);
+
+  ctx.restore();
+}
+
+function render(now) {
+  const tSec = now * 0.001;
+  pointer.x += (pointer.targetX - pointer.x) * 0.06;
+  pointer.y += (pointer.targetY - pointer.y) * 0.06;
+
+  ctx.clearRect(0, 0, width, height);
+
+  // إضاءة خلفية متدرجة تتبع المؤشر
+  const grad = ctx.createRadialGradient(
+    width * pointer.x,
+    height * pointer.y,
+    20,
+    width * 0.5,
+    height * 0.5,
+    Math.max(width, height) * 0.75
+  );
+  grad.addColorStop(0, 'rgba(255, 106, 26, 0.14)');
+  grad.addColorStop(0.5, 'rgba(14, 165, 233, 0.06)');
+  grad.addColorStop(1, 'rgba(7, 16, 23, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // رسم المسار المنحني بين المحطات
+  ctx.save();
+  ctx.beginPath();
+  const steps = 80;
+  for (let i = 0; i <= steps; i++) {
+    const p = getRoutePoint(i / steps);
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7, 7]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // رسم نقاط المحطات الأربع
+  const stationPositions = [0.05, 0.36, 0.68, 0.96];
+  stationPositions.forEach((pos, idx) => {
+    const pt = getRoutePoint(pos);
+    const isCurrent = idx === activeStation;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, isCurrent ? 10 : 6, 0, Math.PI * 2);
+    ctx.fillStyle = isCurrent ? '#ff6a1a' : 'rgba(148, 163, 184, 0.55)';
+    ctx.fill();
+
+    if (isCurrent) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 17 + Math.sin(tSec * 4) * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 106, 26, 0.45)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   });
 
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = '';
+  // تحديث موقع الطرد المتحرك على المسار
+  if (animEnabled) {
+    parcelProgress += 0.0018;
+    if (parcelProgress > 1) parcelProgress = 0;
+  }
+
+  const parcelPt = getRoutePoint(parcelProgress);
+  ctx.save();
+  ctx.translate(parcelPt.x, parcelPt.y);
+  ctx.rotate(Math.sin(tSec * 3) * 0.14);
+
+  // هالة الطرد
+  ctx.fillStyle = 'rgba(255, 106, 26, 0.25)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // صندوق الطرد
+  ctx.fillStyle = '#ff6a1a';
+  ctx.strokeStyle = '#ffd0b0';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(-13, -13, 26, 26, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  // شريط الإغلاق
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-2, -13, 4, 26);
+  ctx.restore();
+
+  // رسم المكعبات الطائرة لتطبيقات ومنصات الخدمة
+  appCubes.forEach((c) => {
+    const floatY = Math.sin(tSec * 1.4 + c.phase) * 14;
+    const floatX = Math.cos(tSec * 1.1 + c.phase) * 10;
+    const parallaxX = (pointer.x - 0.5) * 28;
+    const parallaxY = (pointer.y - 0.5) * 24;
+    const tilt = Math.sin(tSec * 1.2 + c.phase) * 0.14 + (pointer.x - 0.5) * 0.2;
+
+    drawIsoCube(
+      width * c.bx + floatX + parallaxX,
+      height * c.by + floatY + parallaxY,
+      c.size,
+      tilt,
+      c.color,
+      c.label,
+      c.sub
+    );
+  });
+
+  ctx.restore();
+  requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+
+// تبديل المحطات التفاعلية
+const stations = [
+  {
+    badge: 'المحطة 01 / 04',
+    title: 'إرسال الرابط وتأكيد التفاصيل',
+    desc: 'ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.',
+    pos: 0.05
+  },
+  {
+    badge: 'المحطة 02 / 04',
+    title: 'الدفع بالدينار عبر BaridiMob',
+    desc: 'بعد اعتماد الطلب، تحوّل المبلغ الإجمالي بالدينار عبر BaridiMob دون الحاجة لبطاقة بنكية أو عملة صعبة.',
+    pos: 0.36
+  },
+  {
+    badge: 'المحطة 03 / 04',
+    title: 'إتمام الطلب والشحن الدولي',
+    desc: 'ننفّذ الطلب فوراً على المتجر ونزوّدك برقم التتبع لمتابعة مسار الطرد وفق الضوابط الجمركية المعتمدة.',
+    pos: 0.68
+  },
+  {
+    badge: 'المحطة 04 / 04',
+    title: 'متابعة TrackIt واستلام البريد',
+    desc: 'تتابع وصول الشحنة عبر TrackIt وتستلم طردك مباشرة في مكتب البريد ببلديتك في أي ولاية.',
+    pos: 0.96
+  }
+];
+
+const chips = document.querySelectorAll('.station-chip');
+const stationBadge = document.getElementById('stationBadge');
+const stationTitle = document.getElementById('stationTitle');
+const stationDesc = document.getElementById('stationDesc');
+
+chips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    const idx = Number(chip.dataset.station);
+    activeStation = idx;
+    parcelProgress = stations[idx].pos;
+    chips.forEach((c) => c.classList.remove('active'));
+    chip.classList.add('active');
+    stationBadge.textContent = stations[idx].badge;
+    stationTitle.textContent = stations[idx].title;
+    stationDesc.textContent = stations[idx].desc;
   });
 });
 
-// حاسبة التكلفة والعمولة
-const priceInput = document.getElementById('productPrice');
-const rateInput = document.getElementById('exchangeRate');
-const platformSelect = document.getElementById('platform');
-const urlInput = document.getElementById('productUrl');
-const promoCheck = document.getElementById('promoCheck');
+// زر إيقاف/تشغيل الحركة
+const toggleStageBtn = document.getElementById('toggleStageBtn');
+toggleStageBtn.addEventListener('click', () => {
+  animEnabled = !animEnabled;
+  toggleStageBtn.textContent = animEnabled ? 'إيقاف/تشغيل الحركة' : 'تشغيل الحركة';
+});
 
-const resUsd = document.getElementById('resUsd');
-const resProductDzd = document.getElementById('resProductDzd');
-const resCommission = document.getElementById('resCommission');
-const resTotalDzd = document.getElementById('resTotalDzd');
-const statusBadge = document.getElementById('statusBadge');
+// منطق الحاسبة الفورية
+const storeSelect = document.getElementById('storeSelect');
+const usdInput = document.getElementById('usdInput');
+const rateInput = document.getElementById('rateInput');
+const linkInput = document.getElementById('linkInput');
+const firstTenToggle = document.getElementById('firstTenToggle');
 
-const copyOrderBtn = document.getElementById('copyOrderBtn');
-const copyFeedback = document.getElementById('copyFeedback');
+const productDzdOut = document.getElementById('productDzdOut');
+const feeDzdOut = document.getElementById('feeDzdOut');
+const totalDzdOut = document.getElementById('totalDzdOut');
+const commissionBadge = document.getElementById('commissionBadge');
 
-let currentAnimatedTotal = 2750;
-
-function animateValue(element, start, end, duration) {
-  const startTime = performance.now();
-  element.classList.add('bump');
-  setTimeout(() => element.classList.remove('bump'), 220);
-
-  function update(currentTime) {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const easeOut = 1 - Math.pow(1 - progress, 3);
-    const value = Math.round(start + (end - start) * easeOut);
-    element.textContent = value.toLocaleString('en-US') + ' دج';
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    }
-  }
-  requestAnimationFrame(update);
-}
-
-function calculate() {
-  const usd = Math.max(0, parseFloat(priceInput.value) || 0);
+function updateCalc() {
+  const usd = Math.max(0, parseFloat(usdInput.value) || 0);
   const rate = Math.max(1, parseFloat(rateInput.value) || 250);
-  const isPromo = promoCheck.checked;
+  const isFreeFee = firstTenToggle.checked;
 
-  // العمولة: 1 دولار لكل 10 دولار (أي 10% من قيمة المنتج)
-  const commUsd = isPromo ? 0 : usd * 0.10;
+  // العمولة: 1 دولار لكل 10 دولار (10%) أو 0% لعرض أول 10 زبائن
+  const feeUsd = isFreeFee ? 0 : usd * 0.10;
   const productDzd = Math.round(usd * rate);
-  const commDzd = Math.round(commUsd * rate);
-  const totalDzd = productDzd + commDzd;
+  const feeDzd = Math.round(feeUsd * rate);
+  const totalDzd = productDzd + feeDzd;
 
-  resUsd.textContent = usd.toFixed(2) + ' $';
-  resProductDzd.textContent = productDzd.toLocaleString('en-US') + ' دج';
+  productDzdOut.textContent = `${productDzd.toLocaleString('en-US')} دج`;
+  feeDzdOut.textContent = isFreeFee ? '0 دج (عرض 10)' : `${feeDzd.toLocaleString('en-US')} دج`;
+  totalDzdOut.textContent = `${totalDzd.toLocaleString('en-US')} دج`;
 
-  if (isPromo) {
-    resCommission.textContent = '0.00 $ (مجاناً 🎉)';
-    resCommission.style.color = '#22c55e';
-    statusBadge.textContent = 'عرض 10 الأوائل مفعّل';
-    statusBadge.style.color = '#22c55e';
+  if (isFreeFee) {
+    commissionBadge.textContent = '0% عمولة • عرض الافتتاح';
+    commissionBadge.style.color = '#34d399';
+    commissionBadge.style.borderColor = 'rgba(52, 211, 153, 0.45)';
+    commissionBadge.style.background = 'rgba(52, 211, 153, 0.12)';
   } else {
-    resCommission.textContent = `${commUsd.toFixed(2)} $ (${commDzd.toLocaleString('en-US')} دج)`;
-    resCommission.style.color = '#f36f21';
-    statusBadge.textContent = 'التسعيرة العادية';
-    statusBadge.style.color = '#94a3b8';
+    commissionBadge.textContent = 'عمولة 1$ / 10$';
+    commissionBadge.style.color = '#ffb380';
+    commissionBadge.style.borderColor = 'rgba(255, 106, 26, 0.4)';
+    commissionBadge.style.background = 'rgba(255, 106, 26, 0.18)';
   }
-
-  animateValue(resTotalDzd, currentAnimatedTotal, totalDzd, 320);
-  currentAnimatedTotal = totalDzd;
 }
 
-[priceInput, rateInput, promoCheck].forEach((el) => {
-  el.addEventListener('input', calculate);
-  el.addEventListener('change', calculate);
+[usdInput, rateInput, firstTenToggle].forEach((el) => {
+  el.addEventListener('input', updateCalc);
+  el.addEventListener('change', updateCalc);
 });
 
-// نسخ رسالة الطلب الجاهزة
-copyOrderBtn.addEventListener('click', () => {
-  const usd = Math.max(0, parseFloat(priceInput.value) || 0);
+updateCalc();
+
+// نسخ بطاقة الطلب
+const copyBtn = document.getElementById('copyBtn');
+const copyToast = document.getElementById('copyToast');
+
+copyBtn.addEventListener('click', () => {
+  const usd = Math.max(0, parseFloat(usdInput.value) || 0);
   const rate = Math.max(1, parseFloat(rateInput.value) || 250);
-  const isPromo = promoCheck.checked;
-  const commUsd = isPromo ? 0 : usd * 0.10;
-  const totalDzd = Math.round((usd + commUsd) * rate);
-  const link = urlInput.value.trim() || '(سأرفق الرابط هنا)';
+  const isFreeFee = firstTenToggle.checked;
+  const feeUsd = isFreeFee ? 0 : usd * 0.10;
+  const totalDzd = Math.round((usd + feeUsd) * rate);
+  const url = linkInput.value.trim() || '(سأرسل الرابط هنا)';
 
-  const message =
-`السلام عليكم Commandili DZ 🇩🇿
-أريد طلب هذا المنتج:
-• المتجر: ${platformSelect.value}
-• الرابط: ${link}
+  const text =
+`طلب جديد عبر Commandili DZ (كومنديلي) 🇩🇿
+• المنصة: ${storeSelect.value}
+• الرابط: ${url}
 • سعر المنتج: ${usd.toFixed(2)}$
-• العرض: ${isPromo ? 'عرض الـ 10 الأوائل (0% عمولة)' : 'عمولة عادية (1$ لكل 10$)'}
-• المجموع التقديري عبر BaridiMob: ${totalDzd.toLocaleString('en-US')} دج`;
+• النظام: ${isFreeFee ? 'عرض أول 10 زبائن (بدون عمولة 0%)' : 'عمولة 1$ لكل 10$'}
+• الإجمالي التقريبي عبر BaridiMob: ${totalDzd.toLocaleString('en-US')} دج`;
 
-  navigator.clipboard.writeText(message).then(() => {
-    copyFeedback.classList.add('show');
-    setTimeout(() => copyFeedback.classList.remove('show'), 3500);
+  navigator.clipboard.writeText(text).then(() => {
+    copyToast.classList.add('show');
+    setTimeout(() => copyToast.classList.remove('show'), 3500);
   });
 });
-
-// تفعيل الأكورديون لدليل الجمارك
-document.querySelectorAll('.acc-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const item = btn.parentElement;
-    const isActive = item.classList.contains('active');
-    document.querySelectorAll('.acc-item').forEach((i) => i.classList.remove('active'));
-    if (!isActive) item.classList.add('active');
-  });
-});
-
-// حركات الظهور عند التمرير
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.12 });
-
-document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-
-calculate();
+                     
