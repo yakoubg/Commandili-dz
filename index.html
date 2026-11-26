@@ -3,16 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Commandili DZ | كومنديلي — مسار الشحن والحاسبة التفاعلية</title>
+  <meta name="theme-color" content="#071017" />
+  <meta name="description" content="Commandili DZ | وسيط شراء من AliExpress و Temu للجزائر. دفع BaridiMob، عمولة 1$/10$ (0% لأول 10 زبائن)، تتبع TrackIt حتى مكتب البريد." />
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Commandili DZ | كومنديلي — حاسبة ومسار الشحن" />
+  <meta property="og:description" content="اطلب من الخارج بدون بطاقة بنكية. حاسبة فورية، دفع BaridiMob، تتبع TrackIt." />
+  <meta property="og:image" content="assets/og-banner.png" />
+  <meta property="og:url" content="https://yakoubg.github.io/Commandili-dz/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <title>Commandili DZ | كومنديلي — حاسبة ومسار الشحن</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    .intro-overlay{position:fixed;inset:0;z-index:999;background:radial-gradient(circle at center,#122636 0%,#050b10 75%);display:grid;place-items:center;transition:opacity .6s ease,visibility .6s ease,transform .6s ease}
+    .intro-overlay.done{opacity:0;visibility:hidden;transform:scale(1.05);pointer-events:none}
+    .intro-core{position:relative;text-align:center;padding:36px 44px}
+    .intro-orbit{position:absolute;inset:-14px;border-radius:28px;border:1px solid rgba(255,106,26,.35);animation:pulseOrbit 1.8s ease-in-out infinite}
+    @keyframes pulseOrbit{0%,100%{transform:scale(.98);opacity:.45}50%{transform:scale(1.03);opacity:1}}
+    .intro-logo{font-size:clamp(2rem,5vw,3.1rem);font-weight:900;letter-spacing:.5px}
+    .intro-logo span{color:#ff6a1a}
+    .intro-ar{margin-top:6px;color:#94a3b8;font-size:.98rem;font-weight:700}
+    @media (prefers-reduced-motion:reduce){.intro-orbit{animation:none}.intro-overlay{transition-duration:.01s}}
+  </style>
 </head>
 <body>
 
-  <!-- شاشة دخول سريعة وأنيقة -->
-  <div id="introOverlay" class="intro-overlay" aria-hidden="true">
+  <div id="introOverlay" class="intro-overlay" aria-hidden="true" role="img" aria-label="شعار كومنديلي ينبض">
     <div class="intro-core">
       <div class="intro-orbit"></div>
       <div class="intro-logo">Commandili <span>DZ</span></div>
@@ -20,147 +42,107 @@
     </div>
   </div>
 
-  <!-- لوحة Canvas التفاعلية الحية -->
-  <canvas id="stageCanvas" class="stage-canvas"></canvas>
+  <canvas id="stageCanvas" class="stage-canvas" aria-hidden="true" aria-label="محاكاة بصرية لمسار الشحن من المتجر إلى مكتب البريد"></canvas>
 
-  <!-- طبقة الواجهة العائمة فوق المشهد -->
   <div class="hud-shell">
     <header class="top-bar">
       <a href="#top" class="brand-pill">
-        <span class="pulse-dot"></span>
+        <span class="pulse-dot" aria-hidden="true"></span>
         <span>Commandili <strong>DZ</strong> | كومنديلي</span>
       </a>
-
       <div class="top-actions">
-        <button type="button" id="toggleStageBtn" class="ghost-btn">إيقاف/تشغيل الحركة</button>
+        <button type="button" id="toggleStageBtn" class="ghost-btn" aria-pressed="true">إيقاف الحركة</button>
         <a href="#calcSection" class="solid-btn">احسب طلبك الآن</a>
       </div>
     </header>
 
-    <!-- القسم الرئيسي التفاعلي -->
-    <section id="top" class="hero-stage">
-      <div class="hero-copy">
-        <div class="tag-line">⚡ محاكاة حية لمسار الطلب • AliExpress & Temu → الجزائر</div>
-        <h1>اطلب ما تريد من الخارج،<br>و<span>شاهد طردك</span> يقطع الطريق حتى بريدك</h1>
-        <p>بدون بطاقة بنكية. دفع واضح بالدينار عبر <strong>BaridiMob</strong>، عمولة شفافة <strong>1$ لكل 10$</strong> (أو <strong>0% لأول 10 طلبات</strong>)، ومتابعة خطوة بخطوة عبر <strong>TrackIt</strong>.</p>
+    <main id="top">
+      <section class="hero-stage" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <div class="tag-line">⚡ محاكاة حية لمسار الطلب • AliExpress &amp; Temu → الجزائر</div>
+          <h1 id="heroTitle">اطلب ما تريد من الخارج،<br>و<span>شاهد طردك</span> يقطع الطريق حتى بريدك</h1>
+          <p>بدون بطاقة بنكية. دفع واضح بالدينار عبر <strong>BaridiMob</strong>، عمولة شفافة <strong>1$ لكل 10$</strong> (أو <strong>0% لأول 10 طلبات</strong>)، ومتابعة خطوة بخطوة عبر <strong>TrackIt</strong>.</p>
 
-        <div class="station-pills" id="stationPills">
-          <button type="button" class="station-chip active" data-station="0">1. اختيار الطلب</button>
-          <button type="button" class="station-chip" data-station="1">2. الدفع BaridiMob</button>
-          <button type="button" class="station-chip" data-station="2">3. الشحن والجمارك</button>
-          <button type="button" class="station-chip" data-station="3">4. تتبع TrackIt والبريد</button>
-        </div>
-      </div>
-
-      <!-- بطاقة شرح المحطة النشطة -->
-      <aside class="station-card" id="stationCard">
-        <div class="station-step-badge" id="stationBadge">المحطة 01 / 04</div>
-        <h2 id="stationTitle">إرسال الرابط وتأكيد التفاصيل</h2>
-        <p id="stationDesc">ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.</p>
-        <div class="station-meta">
-          <span>الدفع: <strong>BaridiMob</strong></span>
-          <span>التتبع: <strong>TrackIt</strong></span>
-        </div>
-      </aside>
-    </section>
-
-    <!-- قسم الحاسبة التفاعلية المتزامنة مع المشهد -->
-    <section id="calcSection" class="calc-section">
-      <div class="calc-panel">
-        <div class="panel-head">
-          <h2>حاسبة كومنديلي الذكية</h2>
-          <span class="commission-pill" id="commissionBadge">عمولة 1$ / 10$</span>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label for="storeSelect">المنصة</label>
-            <select id="storeSelect">
-              <option value="AliExpress">AliExpress</option>
-              <option value="Temu">Temu</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="usdInput">سعر المنتج + الشحن ($)</label>
-            <input type="number" id="usdInput" min="0" step="0.01" value="20" />
+          <div class="station-pills" id="stationPills" role="tablist" aria-label="مراحل الطلب">
+            <button type="button" class="station-chip active" data-station="0" role="tab" aria-selected="true" aria-controls="stationCard">1. اختيار الطلب</button>
+            <button type="button" class="station-chip" data-station="1" role="tab" aria-selected="false" aria-controls="stationCard">2. الدفع BaridiMob</button>
+            <button type="button" class="station-chip" data-station="2" role="tab" aria-selected="false" aria-controls="stationCard">3. الشحن والجمارك</button>
+            <button type="button" class="station-chip" data-station="3" role="tab" aria-selected="false" aria-controls="stationCard">4. تتبع TrackIt والبريد</button>
           </div>
         </div>
 
-        <div class="field-row">
-          <div class="field">
-            <label for="rateInput">سعر الصرف (دج / 1$)</label>
-            <input type="number" id="rateInput" min="100" step="1" value="250" />
+        <aside class="station-card" id="stationCard" role="tabpanel" aria-live="polite">
+          <div class="station-step-badge" id="stationBadge">المحطة 01 / 04</div>
+          <h2 id="stationTitle">إرسال الرابط وتأكيد التفاصيل</h2>
+          <p id="stationDesc">ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.</p>
+          <div class="station-meta">
+            <span>الدفع: <strong>BaridiMob</strong></span>
+            <span>التتبع: <strong>TrackIt</strong></span>
           </div>
-          <div class="field">
-            <label for="linkInput">رابط المنتج (اختياري)</label>
-            <input type="url" id="linkInput" placeholder="https://..." />
-          </div>
-        </div>
+        </aside>
+      </section>
 
-        <label class="vip-switch" for="firstTenToggle">
-          <div>
-            <strong>عرض الافتتاح: أول 10 زبائن بدون عمولة (0%)</strong>
-            <small>إلغاء كامل للعمولة لتجربة الخدمة بسهولة</small>
+      <section id="calcSection" class="calc-section" aria-labelledby="calcTitle">
+        <div class="calc-panel">
+          <div class="panel-head">
+            <h2 id="calcTitle">حاسبة كومنديلي الذكية</h2>
+            <span class="commission-pill" id="commissionBadge" aria-live="polite">عمولة 1$ / 10$</span>
           </div>
-          <input type="checkbox" id="firstTenToggle" />
-        </label>
 
-        <div class="summary-strip">
-          <div class="summary-item">
-            <span>قيمة المنتج</span>
-            <strong id="productDzdOut">5,000 دج</strong>
-          </div>
-          <div class="summary-item">
-            <span>العمولة</span>
-            <strong id="feeDzdOut">500 دج</strong>
-          </div>
-          <div class="summary-item highlight">
-            <span>الإجمالي للدفع</span>
-            <strong id="totalDzdOut">5,500 دج</strong>
-          </div>
-        </div>
-
-        <button type="button" id="copyBtn" class="copy-order-btn">
-          نسخ بطاقة الطلب لإرسالها في الخاص
-        </button>
-        <div id="copyToast" class="copy-toast">تم نسخ تفاصيل الطلب بنجاح — الصقها في رسائل الصفحة</div>
-      </div>
-
-      <!-- دليل الجمارك السريع -->
-      <div class="rules-panel">
-        <h3>ضوابط الوصول السلس للطرود</h3>
-        <ul class="rules-list">
-          <li>
-            <span class="dot ok"></span>
-            <div>
-              <strong>طابع شخصي واضح</strong>
-              <p>منتجات للاستعمال الشخصي أو العائلي دون تكرار تجاري مفرط لنفس القطعة.</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="storeSelect">المنصة</label>
+              <select id="storeSelect"><option value="AliExpress">AliExpress</option><option value="Temu">Temu</option></select>
             </div>
-          </li>
-          <li>
-            <span class="dot warn"></span>
-            <div>
-              <strong>حدود القيمة والوزن</strong>
-              <p>الالتزام بالحدود المعتمدة للطرود الشخصية في الجمارك والبريد لتفادي أي تأخير.</p>
+            <div class="field">
+              <label for="usdInput">سعر المنتج + الشحن ($)</label>
+              <input type="number" id="usdInput" min="0" step="0.01" value="20" inputmode="decimal" />
             </div>
-          </li>
-          <li>
-            <span class="dot stop"></span>
-            <div>
-              <strong>ممنوعات حساسة</strong>
-              <p>الدرون، أجهزة التجسس، الأسلحة البيضاء، المواد القابلة للاشتعال، والسلع المستعملة.</p>
-            </div>
-          </li>
-        </ul>
+          </div>
 
-        <div class="footnote">
-          الاستلام يتم عبر <strong>مكتب البريد في بلديتك</strong> مع متابعة رقم الطرد عبر <strong>TrackIt</strong>.
+          <div class="field-row">
+            <div class="field">
+              <label for="rateInput">سعر الصرف (دج / 1$)</label>
+              <input type="number" id="rateInput" min="100" step="1" value="250" inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="linkInput">رابط المنتج (اختياري)</label>
+              <input type="url" id="linkInput" placeholder="https://..." />
+            </div>
+          </div>
+
+          <fieldset class="vip-switch" aria-describedby="vipHint">
+            <legend id="vipHint">عرض الافتتاح</legend>
+            <div>
+              <strong>أول 10 زبائن بدون عمولة (0%)</strong>
+              <small>إلغاء كامل للعمولة لتجربة الخدمة بسهولة</small>
+            </div>
+            <input type="checkbox" id="firstTenToggle" role="switch" />
+          </fieldset>
+
+          <div class="summary-strip" role="region" aria-label="ملخص التكلفة" aria-live="polite">
+            <div class="summary-item"><span>قيمة المنتج</span><strong id="productDzdOut">5,000 دج</strong></div>
+            <div class="summary-item"><span>العمولة</span><strong id="feeDzdOut">500 دج</strong></div>
+            <div class="summary-item highlight"><span>الإجمالي للدفع</span><strong id="totalDzdOut">5,500 دج</strong></div>
+          </div>
+
+          <button type="button" id="copyBtn" class="copy-order-btn">نسخ بطاقة الطلب لإرسالها في الخاص</button>
+          <div id="copyToast" class="copy-toast" role="status" aria-live="polite">تم نسخ تفاصيل الطلب بنجاح — الصقها في رسائل الصفحة</div>
         </div>
-      </div>
-    </section>
+
+        <div class="rules-panel">
+          <h3>ضوابط الوصول السلس للطرود</h3>
+          <ul class="rules-list">
+            <li><span class="dot ok" aria-hidden="true"></span><div><strong>طابع شخصي واضح</strong><p>منتجات للاستعمال الشخصي أو العائلي دون تكرار تجاري مفرط لنفس القطعة.</p></div></li>
+            <li><span class="dot warn" aria-hidden="true"></span><div><strong>حدود القيمة والوزن</strong><p>الالتزام بالحدود المعتمدة للطرود الشخصية في الجمارك والبريد لتفادي أي تأخير.</p></div></li>
+            <li><span class="dot stop" aria-hidden="true"></span><div><strong>ممنوعات حساسة</strong><p>الدرون، أجهزة التجسس، الأسلحة البيضاء، المواد القابلة للاشتعال، والسلع المستعملة.</p></div></li>
+          </ul>
+          <div class="footnote">الاستلام يتم عبر <strong>مكتب البريد في بلديتك</strong> مع متابعة رقم الطرد عبر <strong>TrackIt</strong>.</div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
-                                     </html>
-                                         
+</html>
