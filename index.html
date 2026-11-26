@@ -3,571 +3,246 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Commandili DZ كومنديلي | وسيطك للشراء من AliExpress و Temu</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --primary: #1E384B;
-      --primary-dark: #152836;
-      --accent: #E87A33;
-      --accent-hover: #d36823;
-      --bg: #F4F7F9;
-      --card: #FFFFFF;
-      --text: #1E293B;
-      --muted: #64748B;
-      --border: #E2E8F0;
-      --success-bg: #ECFDF5;
-      --success-text: #065F46;
-      --warn-bg: #FFFBEB;
-      --warn-text: #92400E;
-      --danger-bg: #FEF2F2;
-      --danger-text: #991B1B;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    header {
-      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-      color: #fff;
-      padding: 2.5rem 1.25rem;
-      text-align: center;
-      border-bottom: 4px solid var(--accent);
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(232, 122, 51, 0.2);
-      border: 1px solid var(--accent);
-      color: #FFD7BC;
-      padding: 0.25rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-
-    header h1 {
-      font-size: 1.9rem;
-      font-weight: 800;
-      margin-bottom: 0.4rem;
-    }
-
-    header h1 span {
-      color: var(--accent);
-    }
-
-    header p {
-      color: #CBD5E1;
-      max-width: 620px;
-      margin: 0 auto 1.25rem;
-      font-size: 1rem;
-    }
-
-    .rate-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: #fff;
-      color: var(--primary);
-      padding: 0.5rem 1.1rem;
-      border-radius: 12px;
-      font-weight: 800;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    }
-
-    .rate-pill span.val {
-      color: var(--accent);
-      font-size: 1.15rem;
-    }
-
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 1.5rem 1rem 3rem;
-      display: grid;
-      gap: 1.75rem;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-    }
-
-    .card-title {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--primary);
-      margin-bottom: 0.35rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .card-sub {
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .calc-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.25rem;
-    }
-
-    @media (max-width: 700px) {
-      .calc-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .field {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      font-size: 0.92rem;
-      margin-bottom: 0.35rem;
-      color: var(--primary);
-    }
-
-    input[type="number"] {
-      width: 100%;
-      padding: 0.75rem 0.9rem;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-      transition: border-color 0.2s;
-    }
-
-    input[type="number"]:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    input[readonly] {
-      background: #F8FAFC;
-      color: var(--primary);
-      cursor: default;
-    }
-
-    .summary-box {
-      background: #F8FAFC;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.15rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.45rem 0;
-      border-bottom: 1px dashed var(--border);
-      font-size: 0.95rem;
-    }
-
-    .row:last-of-type {
-      border-bottom: none;
-    }
-
-    .total-row {
-      margin-top: 0.6rem;
-      padding-top: 0.75rem;
-      border-top: 2px solid var(--primary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 800;
-      font-size: 1.2rem;
-      color: var(--primary);
-    }
-
-    .total-row .amount {
-      color: var(--accent);
-      font-size: 1.4rem;
-    }
-
-    .btn {
-      width: 100%;
-      margin-top: 1rem;
-      padding: 0.8rem 1rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background: var(--accent-hover);
-    }
-
-    .copy-msg {
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--success-text);
-      font-weight: 700;
-      margin-top: 0.5rem;
-      min-height: 1.2rem;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.9rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .step {
-      background: #F8FAFC;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .step-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 800;
-      font-size: 0.85rem;
-      margin-bottom: 0.45rem;
-    }
-
-    .step h4 {
-      font-size: 0.98rem;
-      color: var(--primary);
-      margin-bottom: 0.25rem;
-    }
-
-    .step p {
-      font-size: 0.88rem;
-      color: var(--muted);
-    }
-
-    .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    @media (max-width: 700px) {
-      .compare-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .box-ems {
-      background: var(--success-bg);
-      border: 1px solid #A7F3D0;
-      color: var(--success-text);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .box-post {
-      background: var(--warn-bg);
-      border: 1px solid #FDE68A;
-      color: var(--warn-text);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .box-ems h4, .box-post h4 {
-      font-size: 1.02rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .box-ems p, .box-post p {
-      font-size: 0.9rem;
-    }
-
-    .tips-list {
-      list-style: none;
-      display: grid;
-      gap: 0.75rem;
-    }
-
-    .tips-list li {
-      background: #F8FAFC;
-      border-right: 4px solid var(--accent);
-      padding: 0.85rem 1rem;
-      border-radius: 8px;
-      font-size: 0.93rem;
-    }
-
-    .tips-list li strong {
-      color: var(--primary);
-    }
-
-    .alert-note {
-      margin-top: 1rem;
-      background: var(--danger-bg);
-      border: 1px solid #FECACA;
-      color: var(--danger-text);
-      padding: 0.85rem 1rem;
-      border-radius: 10px;
-      font-size: 0.88rem;
-    }
-
-    footer {
-      text-align: center;
-      padding: 1.5rem 1rem;
-      color: var(--muted);
-      font-size: 0.88rem;
-      border-top: 1px solid var(--border);
-      background: #fff;
-    }
-  </style>
+  <title>Commandili DZ | كومنديلي — الشراء من AliExpress و Temu بالدينار</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- شاشة التحميل الاحترافية -->
+  <div id="preloader" class="preloader">
+    <div class="loader-box">
+      <div class="loader-ring"></div>
+      <div class="loader-brand">Commandili <span>DZ</span></div>
+      <div class="loader-sub">كومنديلي • جاري تجهيز التجربة...</div>
+    </div>
+  </div>
+
+  <!-- شريط تقدم التمرير العلوي -->
+  <div id="scrollProgress" class="scroll-progress"></div>
+
+  <!-- الخلفية والمكعبات الطائرة لتطبيقات ومنصات الخدمة -->
+  <div class="ambient-bg" id="ambientBg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="floating-cube cube-1" data-speed="0.025">
+      <span class="cube-badge ali">AE</span>
+      <small>AliExpress</small>
+    </div>
+    <div class="floating-cube cube-2" data-speed="-0.03">
+      <span class="cube-badge temu">T</span>
+      <small>Temu</small>
+    </div>
+    <div class="floating-cube cube-3" data-speed="0.02">
+      <span class="cube-badge baridi">BM</span>
+      <small>BaridiMob</small>
+    </div>
+    <div class="floating-cube cube-4" data-speed="-0.022">
+      <span class="cube-badge track">TI</span>
+      <small>TrackIt</small>
+    </div>
+    <div class="floating-cube cube-5" data-speed="0.018">
+      <span class="cube-badge post">DZ</span>
+      <small>Poste DZ</small>
+    </div>
+  </div>
+
   <header>
-    <div class="badge">AliExpress • Temu • BaridiMob</div>
-    <h1>Commandili <span>DZ</span> كومنديلي</h1>
-    <p>وسيطك الموثوق للشراء من المواقع العالمية والدفع بالدينار الجزائري بكل شفافية</p>
-    <div class="rate-pill">
-      <span>سعر الدولار المعتمد اليوم:</span>
-      <span class="val" id="headerRate">250 دج</span>
-      <span id="rateDate" style="font-size:0.78rem; color:#64748B;"></span>
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+            <path d="m3.3 7 8.7 5 8.7-5"/>
+            <path d="M12 22V12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Commandili <span>DZ</span></div>
+          <span class="brand-sub">كومنديلي • وساطة الشراء بالدينار</span>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#calculator">الحاسبة</a>
+        <a href="#steps">طريقة الطلب</a>
+        <a href="#customs">دليل الجمارك</a>
+        <a href="#calculator" class="cta-mini">احسب طلبك</a>
+      </nav>
     </div>
   </header>
 
   <main class="container">
+    <!-- قسم الترحيب -->
+    <section class="hero reveal">
+      <div class="promo-pill">🎉 عرض الافتتاح: أول 10 طلبات بدون عمولة (0%)</div>
+      <h1>اطلب من <span>AliExpress و Temu</span><br>بالدينار الجزائري بكل سهولة</h1>
+      <p>بلا بطاقة بنكية وبكل شفافية: احسب تكلفة طلبك فوراً، خلّص عبر <strong>BaridiMob</strong>، واستلم طردك في مكتب البريد ببلديتك مع تتبع مباشر عبر <strong>TrackIt</strong>.</p>
+    </section>
 
-    <!-- حاسبة السعر بالدينار -->
-    <section class="card" id="calculator">
-      <h2 class="card-title">حاسبة السعر النهائي بالدينار الجزائري</h2>
-      <p class="card-sub">أدخل سعر المنتج بالدولار (مع الشحن إن وجد) وسيظهر لك المبلغ النهائي شامل العمولة.</p>
+    <!-- الحاسبة التفاعلية -->
+    <section id="calculator" class="calc-grid reveal">
+      <div class="card tilt-card">
+        <div class="card-header">
+          <h2>🧮 حاسبة التكلفة والعمولة</h2>
+          <span class="badge-accent">عمولة 1$ لكل 10$</span>
+        </div>
 
-      <div class="calc-grid">
+        <div class="form-group">
+          <label for="platform">المتجر الإلكتروني</label>
+          <select id="platform">
+            <option value="AliExpress">AliExpress</option>
+            <option value="Temu">Temu</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="productPrice">سعر المنتج مع الشحن (بالدولار $)</label>
+          <div class="input-wrap">
+            <input type="number" id="productPrice" min="0" step="0.01" placeholder="مثال: 15.50" value="10" />
+            <span class="currency-tag">USD $</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exchangeRate">سعر الصرف المعتمد (1$ بالدينار)</label>
+          <div class="input-wrap">
+            <input type="number" id="exchangeRate" min="100" step="1" value="250" />
+            <span class="currency-tag">DZD</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="productUrl">رابط المنتج (اختياري لتجهيز رسالة الطلب)</label>
+          <input type="url" id="productUrl" placeholder="https://www.aliexpress.com/item/..." />
+        </div>
+
+        <label class="promo-toggle" for="promoCheck">
+          <div>
+            <strong class="promo-title">تفعيل عرض أول 10 زبائن (0% عمولة)</strong>
+            <div class="promo-desc">إعفاء كامل من عمولة الخدمة في عرض الافتتاح</div>
+          </div>
+          <input type="checkbox" id="promoCheck" />
+        </label>
+      </div>
+
+      <div class="card result-box tilt-card">
         <div>
-          <div class="field">
-            <label for="usdPrice">سعر المنتج بالدولار ($)</label>
-            <input type="number" id="usdPrice" placeholder="مثال: 15.5" min="0" step="0.01" value="10" />
+          <div class="card-header">
+            <h2>📊 ملخص الحساب</h2>
+            <span id="statusBadge" class="status-badge">التسعيرة العادية</span>
           </div>
 
-          <div class="field">
-            <label for="usdRate">سعر صرف الدولار اليوم (دج)</label>
-            <input type="number" id="usdRate" value="250" readonly />
+          <div class="breakdown-row">
+            <span>سعر المنتج بالدولار:</span>
+            <strong id="resUsd">10.00 $</strong>
           </div>
-
-          <p style="font-size: 0.84rem; color: var(--muted);">
-            • أقل من 10$: عمولة ثابتة <strong>250 دج</strong>.<br />
-            • من 10$ إلى 60$: عمولة <strong>1$ لكل 10$</strong>.<br />
-            • أكثر من 60$: <strong>تخفيض خاص</strong> على العمولة.
-          </p>
+          <div class="breakdown-row">
+            <span>قيمة المنتج بالدينار:</span>
+            <strong id="resProductDzd">2,500 دج</strong>
+          </div>
+          <div class="breakdown-row">
+            <span>عمولة الخدمة (1$ لكل 10$):</span>
+            <strong id="resCommission" class="accent-text">1.00 $ (250 دج)</strong>
+          </div>
         </div>
 
-        <div class="summary-box">
-          <div>
-            <div class="row">
-              <span>سعر المنتج بالدينار:</span>
-              <strong id="productDzd">2,500 دج</strong>
-            </div>
-            <div class="row">
-              <span>قيمة العمولة:</span>
-              <strong id="commissionDzd">250 دج</strong>
-            </div>
-            <div class="row">
-              <span>نسبة / نوع العمولة:</span>
-              <span id="commissionNote" style="color: var(--muted); font-size: 0.85rem;">1$ لكل 10$</span>
-            </div>
-            <div class="total-row">
-              <span>المجموع النهائي:</span>
-              <span class="amount" id="totalDzd">2,750 دج</span>
-            </div>
+        <div>
+          <div class="total-panel">
+            <div class="total-label">المبلغ الإجمالي للدفع عبر BaridiMob</div>
+            <div class="total-amount" id="resTotalDzd">2,750 دج</div>
           </div>
 
-          <div>
-            <button class="btn" id="copyBtn" type="button">نسخ ملخص الطلب لإرساله في الرسائل</button>
-            <div class="copy-msg" id="copyMsg"></div>
-          </div>
+          <button class="btn-primary" id="copyOrderBtn" type="button">
+            <span>📋 نسخ تفاصيل الطلب لإرسالها في الخاص</span>
+          </button>
+          <div class="copy-feedback" id="copyFeedback">✓ تم نسخ رسالة الطلب! الصقها في رسائل صفحتنا على فيسبوك</div>
         </div>
       </div>
     </section>
 
-    <!-- تتبع الطرد والفرق بين EMS والبريد -->
-    <section class="card" id="tracking">
-      <h2 class="card-title">طريقة تتبع الطرد عبر تطبيق TrackIt</h2>
-      <p class="card-sub">بمجرد تأكيد طلبك وشحنه، نزودك برقم التتبع لتراقب طردك خطوة بخطوة حتى الاستلام.</p>
+    <!-- خطوات الطلب -->
+    <section id="steps" class="reveal">
+      <div class="section-title">
+        <h2>كيف تطلب مع Commandili DZ؟</h2>
+        <p>أربع خطوات واضحة من اختيار المنتج حتى استلامه في بريد بلديتك</p>
+      </div>
 
-      <div class="steps">
-        <div class="step">
+      <div class="steps-grid">
+        <div class="step-card tilt-card">
           <div class="step-num">1</div>
-          <h4>تأكيد الطلب والشحن</h4>
-          <p>نشتري المنتج باسمك وعنوانك ونرسل لك رقم التتبع الخاص بالطرد.</p>
+          <h3>أرسل رابط المنتج</h3>
+          <p>انسخ رابط المنتج من AliExpress أو Temu وأرسله لنا في رسالة خاصة على الصفحة.</p>
         </div>
-        <div class="step">
+
+        <div class="step-card tilt-card">
           <div class="step-num">2</div>
-          <h4>التتبع عبر تطبيق TrackIt</h4>
-          <p>حمّل تطبيق <strong>TrackIt</strong> وضع رقم التتبع لمراقبة خروج الطرد من بلد المنشأ ووصوله للجزائر.</p>
+          <h3>احسب التكلفة</h3>
+          <p>استخدم الحاسبة أعلاه لمعرفة السعر بالدينار والعمولة الواضحة (1$ لكل 10$).</p>
         </div>
-        <div class="step">
+
+        <div class="step-card tilt-card">
           <div class="step-num">3</div>
-          <h4>الفرز والوصول لولايتك</h4>
-          <p>يُظهر التطبيق دخول الطرد إلى مركز الفرز ثم توجيهه نحو مكتب البريد أو التوزيع السريع.</p>
+          <h3>ادفع عبر BaridiMob</h3>
+          <p>بعد تأكيد توفر المنتج، قم بتحويل المبلغ بالدينار بسهولة عبر تطبيق BaridiMob.</p>
         </div>
-        <div class="step">
+
+        <div class="step-card tilt-card">
           <div class="step-num">4</div>
-          <h4>الاستلام ببطاقة الهوية</h4>
-          <p>عند ظهور حالة الوصول في التطبيق، تتوجه للاستلام ببطاقة التعريف الوطنية.</p>
-        </div>
-      </div>
-
-      <div class="compare-grid">
-        <div class="box-ems">
-          <h4>التوصيل عبر EMS (البريد السريع)</h4>
-          <p>عندما يصل طردك عبر خدمة <strong>EMS</strong>، يتم توصيله أو تسليمه عبر مصالح البريد السريع، وفي الحالات العادية للطرود الشخصية المعفاة <strong>لا تدفع رسوم استلام بريدية إضافية</strong> (باستثناء أي رسوم جمركية إن فُرضت على الطرد).</p>
-        </div>
-        <div class="box-post">
-          <h4>التوصيل عبر مكتب البريد العادي</h4>
-          <p>عندما يصل طردك إلى <strong>مكتب البريد التابع لبلديتك</strong>، يطلب منك عون البريد دفع رسوم بريدية رمزية بسيطة عند الاستلام (عادة بين <strong>130 دج و 200 دج</strong>).</p>
+          <h3>استلم وتابع طردك</h3>
+          <p>نزودك برقم التتبع لمتابعة الشحنة عبر TrackIt حتى وصولها لمكتب البريد في بلديتك.</p>
         </div>
       </div>
     </section>
 
-    <!-- دليل تجنب حجز الجمارك -->
-    <section class="card" id="customs">
-      <h2 class="card-title">كيف تتجنب حجز طردك من طرف الجمارك؟</h2>
-      <p class="card-sub">التزم بهذه القواعد الأساسية لضمان مرور طردك الشخصي بسلاسة دون تعطيل أو مصادرة:</p>
+    <!-- دليل الجمارك التفاعلي -->
+    <section id="customs" class="reveal">
+      <div class="section-title">
+        <h2>📋 دليل الجمارك والطرود البريدية</h2>
+        <p>معلومات مختصرة لتفادي حجز الطرد وضمان وصوله بسلاسة</p>
+      </div>
 
-      <ul class="tips-list">
-        <li><strong>تجنب المنتجات الممنوعة والحساسة:</strong> مثل طائرات الدرون، الكاميرات الخفية أو التجسسية، أجهزة اللاسلكي والتشويش، الليزر القوي، أو الأسلحة البيضاء والمقلدة.</li>
-        <li><strong>اطلب للاستعمال الشخصي فقط:</strong> تجنب طلب عدة قطع متطابقة من نفس المنتج في طرد واحد (مثلاً 5 أو 10 هواتف أو ساعات) حتى لا يُصنّف الطرد كنشاط تجاري.</li>
-        <li><strong>قسم الطلبات الكبيرة إلى طرود صغيرة:</strong> إذا كنت تريد شراء عدة أغراض بقيمة مرتفعة، الأفضل تقسيمها على طلبين أو أكثر بفارق أيام قليلة.</li>
-        <li><strong>انتبه للمنتجات التي تحتوي على بطاريات كبيرة أو سوائل:</strong> بعض البطاريات المستقلة أو السوائل الكيميائية تخضع لقيود مشددة في الشحن والجمارك.</li>
-      </ul>
+      <div class="accordion">
+        <div class="acc-item active">
+          <button class="acc-btn" type="button">
+            <span>✅ ما هي الطرود والسلع المسموح بطلبها؟</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="acc-content">
+            تُقبل المنتجات الموجهة للاستعمال الشخصي أو العائلي العادي (ملابس جديدة، إكسسوارات، مستلزمات يومية وأدوات بسيطة)، مع الحرص على عدم تكرار نفس القطعة بكميات كبيرة في طرد واحد حتى لا تُصنّف كنشاط تجاري.
+          </div>
+        </div>
 
-      <div class="alert-note">
-        تنبيه: تخضع جميع الطرود الواردة للرقابة الجمركية وفق القوانين الجزائرية السارية، وأي رسوم جمركية استثنائية أو حجز ناتج عن طلب منتج محظور يقع على مسؤولية المشتري.
+        <div class="acc-item">
+          <button class="acc-btn" type="button">
+            <span>🚫 ما هي السلع الممنوعة أو الحساسة جمركياً؟</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="acc-content">
+            يُمنع طلب طائرات الدرون، أجهزة التجسس أو التصوير الخفي، الأسلحة البيضاء والأدوات الحادة، المواد القابلة للاشتعال أو الخطرة، والسلع المستعملة (مثل الهواتف المستعملة) أو المقلدة.
+          </div>
+        </div>
+
+        <div class="acc-item">
+          <button class="acc-btn" type="button">
+            <span>📏 ما هو الحد الأقصى لقيمة ووزن الطرد الشخصي؟</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="acc-content">
+            يجب أن يبقى الطرد في إطار الاستعمال الشخصي وغير التجاري (تُعتمد في الأنظمة الجمركية عتبات 50,000 دج للإعفاء/الضريبة الجزافية و100,000 دج كسقف للطابع غير التجاري)، ووزن الطرود البريدية العادية يكون ضمن حدود البريد المعتمدة (عادة حتى 30 كغ).
+          </div>
+        </div>
       </div>
     </section>
-
   </main>
 
   <footer>
-    Commandili DZ كومنديلي — للطلب والاستفسار تواصل معنا مباشرة عبر رسائل صفحة فيسبوك.
+    <p>© 2026 <strong>Commandili DZ كومنديلي</strong> — خدمة الوساطة للشراء من AliExpress و Temu في الجزائر 🇩🇿</p>
   </footer>
 
-  <script>
-    let DAILY_RATE_DZD = 250;
-
-    const usdPriceInput = document.getElementById('usdPrice');
-    const usdRateInput = document.getElementById('usdRate');
-    const headerRateEl = document.getElementById('headerRate');
-    const rateDateEl = document.getElementById('rateDate');
-
-    const productDzdEl = document.getElementById('productDzd');
-    const commissionDzdEl = document.getElementById('commissionDzd');
-    const commissionNoteEl = document.getElementById('commissionNote');
-    const totalDzdEl = document.getElementById('totalDzd');
-    const copyBtn = document.getElementById('copyBtn');
-    const copyMsg = document.getElementById('copyMsg');
-
-    function formatDzd(num) {
-      return Math.round(num).toLocaleString('en-US') + ' دج';
-    }
-
-    function calculate() {
-      const usd = parseFloat(usdPriceInput.value) || 0;
-      const rate = DAILY_RATE_DZD;
-
-      const productDzd = usd * rate;
-      let commissionDzd = 0;
-      let note = 'بدون طلب';
-
-      if (usd > 0 && usd < 10) {
-        commissionDzd = 250;
-        note = 'عمولة ثابتة (أقل من 10$)';
-      } else if (usd >= 10 && usd <= 60) {
-        commissionDzd = (usd * 0.10) * rate;
-        note = '1$ لكل 10$';
-      } else if (usd > 60) {
-        commissionDzd = (usd * 0.08) * rate;
-        note = 'تخفيض الطلبات الكبيرة (8%)';
-      }
-
-      const totalDzd = productDzd + commissionDzd;
-
-      productDzdEl.textContent = formatDzd(productDzd);
-      commissionDzdEl.textContent = formatDzd(commissionDzd);
-      commissionNoteEl.textContent = note;
-      totalDzdEl.textContent = formatDzd(totalDzd);
-    }
-
-    async function loadDailyRate() {
-      try {
-        const response = await fetch('rate.json?t=' + Date.now());
-        if (response.ok) {
-          const data = await response.json();
-          if (data && typeof data.usd_to_dzd === 'number' && data.usd_to_dzd > 0) {
-            DAILY_RATE_DZD = data.usd_to_dzd;
-            if (data.updated_at) {
-              rateDateEl.textContent = '(تحديث: ' + data.updated_at + ')';
-            }
-          }
-        }
-      } catch (e) {
-        // استخدام القيمة الاحتياطية في حال عدم توفر الملف
-      }
-      usdRateInput.value = DAILY_RATE_DZD;
-      headerRateEl.textContent = DAILY_RATE_DZD + ' دج';
-      calculate();
-    }
-
-    usdPriceInput.addEventListener('input', calculate);
-
-    copyBtn.addEventListener('click', () => {
-      const usd = parseFloat(usdPriceInput.value) || 0;
-      const text =
-        `السلام عليكم Commandili DZ، أريد طلب منتج:\n` +
-        `• السعر بالدولار: ${usd}$\n` +
-        `• سعر الصرف اليوم: ${DAILY_RATE_DZD} دج\n` +
-        `• المجموع النهائي مع العمولة: ${totalDzdEl.textContent}\n` +
-        `(سأرسل رابط المنتج والمقاس/اللون الآن)`;
-
-      navigator.clipboard.writeText(text).then(() => {
-        copyMsg.textContent = 'تم نسخ الملخص! الصقه في رسالة على الصفحة.';
-        setTimeout(() => { copyMsg.textContent = ''; }, 3000);
-      });
-    });
-
-    loadDailyRate();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
