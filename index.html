@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -23,7 +23,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Intro-overlay critical CSS -->
   <style>
     .intro-overlay{position:fixed;inset:0;z-index:999;background:radial-gradient(circle at center,#122636 0%,#050b10 75%);display:grid;place-items:center;transition:opacity .6s ease,visibility .6s ease,transform .6s ease}
     .intro-overlay.done{opacity:0;visibility:hidden;transform:scale(1.05);pointer-events:none}
@@ -38,7 +37,7 @@
 </head>
 <body>
 
-  <!-- ==== مقدمة متحركة ==== -->
+  <!-- مقدمة متحركة -->
   <div id="introOverlay" class="intro-overlay" aria-hidden="true">
     <div class="intro-core">
       <div class="intro-orbit"></div>
@@ -50,7 +49,7 @@
   <!-- Canvas الخلفي -->
   <canvas id="stageCanvas" class="stage-canvas" aria-hidden="true"></canvas>
 
-  <!-- ==== المحتوى الرئيسي ==== -->
+  <!-- المحتوى الرئيسي -->
   <div class="hud-shell">
 
     <!-- الشريط العلوي -->
@@ -66,13 +65,14 @@
       </nav>
     </header>
 
-    <!-- محتوى الصفحة -->
     <main id="top">
 
       <!-- ===== Hero ===== -->
       <section class="hero-stage" aria-labelledby="heroTitle">
         <div class="hero-copy">
-          <div class="tag-line">⚡ محاكاة حية لمسار الطلب • AliExpress &amp; Temu → الجزائر</div>
+          <button type="button" id="nextStationTag" class="tag-line" title="اضغط للانتقال للمرحلة التالية">
+            ⚡ محاكاة حية لمسار الطلب • AliExpress &amp; Temu → الجزائر
+          </button>
           <h1 id="heroTitle">اطلب ما تريد من الخارج،<br>و<span>شاهد طردك</span> يقطع الطريق حتى بريدك</h1>
           <p>بدون بطاقة بنكية. دفع واضح بالدينار عبر <strong>BaridiMob</strong>، عمولة شفافة <strong>1$ لكل 10$</strong> (أو <strong>0% لأول 10 طلبات</strong>)، ومتابعة خطوة بخطوة عبر <strong>TrackIt</strong>.</p>
 
@@ -119,8 +119,9 @@
 
           <div class="field-row">
             <div class="field">
-              <label for="rateInput">سعر الصرف (دج / 1$)</label>
+              <label for="rateInput">سعر الصرف اليومي (دج / 1$)</label>
               <input type="number" id="rateInput" min="100" max="1000" step="0.5" value="250" inputmode="decimal" />
+              <small id="rateSourceNote" class="rate-note">جاري تحميل سعر اليوم...</small>
             </div>
             <div class="field">
               <label for="linkInput">رابط المنتج (اختياري)</label>
@@ -130,14 +131,13 @@
 
           <p id="validationNote" class="validation-note" role="alert" aria-live="polite"></p>
 
-          <fieldset class="vip-switch" aria-describedby="vipHint">
-            <legend id="vipHint">عرض الافتتاح</legend>
+          <label class="vip-switch" for="firstTenToggle">
             <div>
               <strong>أول 10 زبائن بدون عمولة (0%)</strong>
               <small>إلغاء كامل للعمولة لتجربة الخدمة بسهولة</small>
             </div>
             <input type="checkbox" id="firstTenToggle" role="switch" />
-          </fieldset>
+          </label>
 
           <div class="summary-strip" role="region" aria-label="ملخص التكلفة" aria-live="polite">
             <div class="summary-item"><span>قيمة المنتج</span><strong id="productDzdOut">5,000 دج</strong></div>
@@ -188,7 +188,7 @@
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
               <div class="faq-answer">
-                <p>بعد مراجعة رابط المنتج وتأكيد توفره، يتم تحويل المبلغ الإجمالي بالدينار الجزائري عبر <strong>BaridiMob</strong>، ثم نُتمّ عملية الشراء نيابةً عنك.</p>
+                <p>بعد مراجعة رابط المنتج وتأكيد توفره، يتم تحويل المبلغ الإجمالي بالدينار الجزائري عبر <strong>BaridiMob</strong>، ثم نُتمّ عملية الشراء نيابةً عنك ونرسل لك تأكيد الطلب.</p>
               </div>
             </article>
 
@@ -198,7 +198,7 @@
                 <span class="faq-icon" aria-hidden="true">+</span>
               </button>
               <div class="faq-answer">
-                <p>يصل الطرد إلى <strong>مكتب البريد في بلديتك</strong> ويمكنك متابعة حركته عبر <strong>TrackIt</strong>. لا نوفر خدمة توصيل منزلي مباشر؛ الاستلام يتم من البريد.</p>
+                <p>يصل الطرد إلى <strong>مكتب البريد في بلديتك</strong> ويمكنك متابعة حركته خطوة بخطوة عبر <strong>TrackIt</strong>. لا نوفر خدمة توصيل منزلي مباشر؛ الاستلام يتم من البريد.</p>
               </div>
             </article>
 
