@@ -1,18 +1,17 @@
 /* -------------------------------------------------
-   Commandili DZ – ملف JavaScript محسن وآمن
-   • بنية IIFE لتجنب إغراق النطاق العام
-   • حالة واحدة مركزية + التحقق من صحة المدخلات (Validation & Sanitization)
-   • حماية من الروابط غير الآمنة (javascript: / data: / vbscript:)
-   • قسم الأسئلة الشائعة التفاعلي + زر التواصل المباشر ونسخ الطلب
-   • تحسين أداء Canvas عبر IntersectionObserver و FPS-cap
+   Commandili DZ – ملف JavaScript متكامل
+   • قراءة سعر الصرف اليومي تلقائياً من rate.json (مع تجاوز الكاش)
+   • تفاعل كامل للمحطات والزر العلوي وحركة الطرد على Canvas
+   • حاسبة فورية تدعم عرض أول 10 زبائن (0% عمولة)
+   • أكورديون الأسئلة الشائعة + النسخ والتواصل المباشر
    ------------------------------------------------- */
 
 (function () {
   'use strict';
 
   const CFG = Object.freeze({
+    rateFile: './rate.json',
     feePercent: 0.10,
-    firstTenLimit: 10,
     defaultRate: 250,
     minRate: 100,
     maxRate: 1000,
@@ -20,17 +19,37 @@
     maxUsd: 10000,
     maxLinkLength: 1000,
     roundingStep: 5,
-    introDelay: 450,
-    introMaxDelay: 1600,
+    introDelay: 400,
+    introMaxDelay: 1500,
     canvasFpsCap: 30,
     allowedStores: new Set(['AliExpress', 'Temu'])
   });
 
   const STATIONS = Object.freeze([
-    { badge: 'المحطة 01 / 04', title: 'إرسال الرابط وتأكيد التفاصيل', desc: 'ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.', pos: 0.05 },
-    { badge: 'المحطة 02 / 04', title: 'الدفع بالدينار عبر BaridiMob', desc: 'بعد اعتماد الطلب، تحوّل المبلغ الإجمالي بالدينار عبر BaridiMob دون الحاجة لبطاقة بنكية أو عملة صعبة.', pos: 0.36 },
-    { badge: 'المحطة 03 / 04', title: 'إتمام الطلب والشحن الدولي', desc: 'ننفّذ الطلب فوراً على المتجر ونزوّدك برقم التتبع لمتابعة مسار الطرد وفق الضوابط الجمركية المعتمدة.', pos: 0.68 },
-    { badge: 'المحطة 04 / 04', title: 'متابعة TrackIt واستلام البريد', desc: 'تتابع وصول الشحنة عبر TrackIt وتستلم طردك مباشرة في مكتب البريد ببلديتك في أي ولاية.', pos: 0.96 }
+    {
+      badge: 'المحطة 01 / 04',
+      title: 'إرسال الرابط وتأكيد التفاصيل',
+      desc: 'ترسل رابط المنتج من AliExpress أو Temu في الخاص، نتحقق من توافره وخلوه من القيود الجمركية، ونحسب لك التكلفة بدقة.',
+      pos: 0.05
+    },
+    {
+      badge: 'المحطة 02 / 04',
+      title: 'الدفع بالدينار عبر BaridiMob',
+      desc: 'بعد اعتماد الطلب، تحوّل المبلغ الإجمالي بالدينار عبر BaridiMob دون الحاجة لبطاقة بنكية أو عملة صعبة.',
+      pos: 0.36
+    },
+    {
+      badge: 'المحطة 03 / 04',
+      title: 'إتمام الطلب والشحن الدولي',
+      desc: 'ننفّذ الطلب فوراً على المتجر ونزوّدك برقم التتبع لمتابعة مسار الطرد وفق الضوابط الجمركية المعتمدة.',
+      pos: 0.68
+    },
+    {
+      badge: 'المحطة 04 / 04',
+      title: 'متابعة TrackIt واستلام البريد',
+      desc: 'تتابع وصول الشحنة عبر TrackIt وتستلم طردك مباشرة في مكتب البريد ببلديتك في أي ولاية.',
+      pos: 0.96
+    }
   ]);
 
   const APP_CUBES = Object.freeze([
@@ -55,11 +74,10 @@
   function validateProductUrl(raw) {
     const cleaned = sanitizeText(raw, CFG.maxLinkLength);
     if (!cleaned) return { ok: true, empty: true, value: '', message: '' };
-
     try {
       const parsed = new URL(cleaned);
       if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-        return { ok: false, empty: false, value: '', message: 'يرجى إدخال رابط يبدأ بـ https:// فقط (الروابط غير الآمنة مرفوضة).' };
+        return { ok: false, empty: false, value: '', message: 'يرجى إدخال رابط يبدأ بـ https:// فقط.' };
       }
       return { ok: true, empty: false, value: parsed.toString(), message: '' };
     } catch {
@@ -68,6 +86,7 @@
   }
 
   function clampNumber(raw, min, max, fallback) {
+    if (raw === '' || raw === null || raw === undefined) return fallback;
     const num = Number(raw);
     if (!Number.isFinite(num)) return fallback;
     return Math.min(max, Math.max(min, num));
@@ -77,7 +96,7 @@
     animEnabled: true,
     reduceMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     activeStation: 0,
-    parcelProgress: 0.12,
+    parcelProgress: 0.05,
     pointer: { x: 0.5, y: 0.45, tx: 0.5, ty: 0.45 },
     canvas: { w: 0, h: 0, dpr: 1, ctx: null, rafId: null, lastTs: 0, visible: true },
     inputs: {
@@ -86,7 +105,6 @@
       rate: CFG.defaultRate,
       link: '',
       linkValid: true,
-      validationMsg: '',
       firstTen: false
     }
   };
@@ -101,7 +119,7 @@
       done = true;
       overlay.classList.add('done');
       try { sessionStorage.setItem('cmd_intro_done', '1'); } catch (_) {}
-      setTimeout(() => { overlay.style.display = 'none'; }, 650);
+      setTimeout(() => { overlay.style.display = 'none'; }, 620);
     };
 
     try {
@@ -124,7 +142,6 @@
       if (!canvas) return;
       State.canvas.ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
       this.resize();
-
       window.addEventListener('resize', this.resize.bind(this), { passive: true });
 
       const observer = new IntersectionObserver(entries => {
@@ -145,11 +162,6 @@
           State.pointer.ty = e.touches[0].clientY / State.canvas.h;
         }
       }, { passive: true });
-
-      window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => {
-        State.reduceMotion = e.matches;
-        if (State.reduceMotion) this.pause(); else this.resume();
-      });
 
       this.loop(0);
     },
@@ -172,7 +184,7 @@
       c.rafId = requestAnimationFrame(this.loop.bind(this));
       if (ts - c.lastTs < 1000 / CFG.canvasFpsCap) return;
       c.lastTs = ts;
-      if (!State.animEnabled || State.reduceMotion || !c.visible) return;
+      if (State.reduceMotion || !c.visible) return;
       if (!c.ctx || c.w <= 0 || c.h <= 0) return;
       this.render(ts * 0.001);
     },
@@ -216,9 +228,8 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      const stationPositions = [0.05, 0.36, 0.68, 0.96];
-      stationPositions.forEach((pos, idx) => {
-        const pt = getRoutePoint(pos);
+      STATIONS.forEach((st, idx) => {
+        const pt = getRoutePoint(st.pos);
         const active = idx === activeStation;
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, active ? 10 : 6, 0, Math.PI * 2);
@@ -242,7 +253,7 @@
       const parcelPt = getRoutePoint(State.parcelProgress);
       ctx.save();
       ctx.translate(parcelPt.x, parcelPt.y);
-      ctx.rotate(Math.sin(t * 3) * 0.14);
+      ctx.rotate(State.animEnabled ? Math.sin(t * 3) * 0.14 : 0);
       ctx.fillStyle = 'rgba(255,106,26,0.25)';
       ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ff6a1a';
@@ -255,11 +266,11 @@
       ctx.restore();
 
       APP_CUBES.forEach(c => {
-        const floatY = Math.sin(t * 1.4 + c.phase) * 14;
-        const floatX = Math.cos(t * 1.1 + c.phase) * 10;
+        const floatY = State.animEnabled ? Math.sin(t * 1.4 + c.phase) * 14 : 0;
+        const floatX = State.animEnabled ? Math.cos(t * 1.1 + c.phase) * 10 : 0;
         const px = (pointer.x - 0.5) * 28;
         const py = (pointer.y - 0.5) * 24;
-        const tilt = Math.sin(t * 1.2 + c.phase) * 0.14 + (pointer.x - 0.5) * 0.2;
+        const tilt = State.animEnabled ? Math.sin(t * 1.2 + c.phase) * 0.14 + (pointer.x - 0.5) * 0.2 : 0;
         this.drawIsoCube(
           w * c.bx + floatX + px,
           h * c.by + floatY + py,
@@ -310,30 +321,25 @@
       ctx.font = '700 10px Cairo, sans-serif';
       ctx.fillText(sub, 0, 12);
       ctx.restore();
-    },
-
-    pause() { State.animEnabled = false; },
-    resume() { State.animEnabled = true; }
+    }
   };
 
   const UI = {
     cache() {
       this.el = {
         form:             $('#orderCalcForm'),
+        nextStationTag:   $('#nextStationTag'),
+        stationCard:      $('#stationCard'),
         chips:            $$('.station-chip'),
-        badge:            $('#stationBadge'),
-        title:            $('#stationTitle'),
-        desc:             $('#stationDesc'),
         toggleBtn:        $('#toggleStageBtn'),
         storeSel:         $('#storeSelect'),
         usdIn:            $('#usdInput'),
         rateIn:           $('#rateInput'),
+        rateNote:         $('#rateSourceNote'),
         linkIn:           $('#linkInput'),
         validationNote:   $('#validationNote'),
+        vipSwitch:        $('.vip-switch'),
         firstTen:         $('#firstTenToggle'),
-        prodOut:          $('#productDzdOut'),
-        feeOut:           $('#feeDzdOut'),
-        totalOut:         $('#totalDzdOut'),
         commBadge:        $('#commissionBadge'),
         copyBtn:          $('#copyBtn'),
         directContactBtn: $('#directContactBtn'),
@@ -343,10 +349,143 @@
       };
     },
 
+    async loadDailyRate() {
+      try {
+        const res = await fetch(`${CFG.rateFile}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('rate.json not found');
+        const data = await res.json();
+        const rawRate = data.rate ?? data.usd ?? data.price ?? data.usd_to_dzd;
+        const parsed = clampNumber(rawRate, CFG.minRate, CFG.maxRate, null);
+        if (parsed !== null && this.el.rateIn) {
+          this.el.rateIn.value = String(parsed);
+          State.inputs.rate = parsed;
+          if (this.el.rateNote) {
+            const dateStr = data.updatedAt ? ` (${sanitizeText(String(data.updatedAt), 30)})` : '';
+            this.el.rateNote.textContent = `تم التحديث من rate.json${dateStr}`;
+          }
+          this.renderCalc();
+          return;
+        }
+      } catch (_) {}
+
+      if (this.el.rateNote) {
+        this.el.rateNote.textContent = `السعر الافتراضي: ${CFG.defaultRate} دج`;
+      }
+    },
+
+    selectStation(idx) {
+      const safeIdx = ((idx % STATIONS.length) + STATIONS.length) % STATIONS.length;
+      const st = STATIONS[safeIdx];
+      State.activeStation = safeIdx;
+      State.parcelProgress = st.pos;
+
+      this.el.chips.forEach((chip, i) => {
+        const active = i === safeIdx;
+        chip.classList.toggle('active', active);
+        chip.setAttribute('aria-selected', String(active));
+      });
+
+      setText('stationBadge', st.badge);
+      setText('stationTitle', st.title);
+      setText('stationDesc', st.desc);
+
+      if (this.el.stationCard) {
+        this.el.stationCard.classList.remove('flash');
+        void this.el.stationCard.offsetWidth;
+        this.el.stationCard.classList.add('flash');
+      }
+    },
+
+    initStationControls() {
+      this.el.chips.forEach(ch => {
+        ch.addEventListener('click', () => {
+          const idx = Number(ch.dataset.station);
+          if (Number.isInteger(idx)) this.selectStation(idx);
+        });
+      });
+
+      if (this.el.nextStationTag) {
+        this.el.nextStationTag.addEventListener('click', () => {
+          this.selectStation(State.activeStation + 1);
+        });
+      }
+
+      this.selectStation(0);
+    },
+
+    initToggleAnim() {
+      const btn = this.el.toggleBtn;
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        State.animEnabled = !State.animEnabled;
+        btn.textContent = State.animEnabled ? 'إيقاف الحركة' : 'تشغيل الحركة';
+        btn.setAttribute('aria-pressed', String(State.animEnabled));
+      });
+    },
+
+    initCalculator() {
+      const { form, storeSel, usdIn, rateIn, linkIn, firstTen } = this.el;
+      if (form) form.addEventListener('submit', e => e.preventDefault());
+
+      const syncAndRender = () => {
+        const chosenStore = CFG.allowedStores.has(storeSel?.value) ? storeSel.value : 'AliExpress';
+        const usd = usdIn && usdIn.value === '' ? 0 : clampNumber(usdIn?.value, 0, CFG.maxUsd, CFG.defaultUsd);
+        const rate = clampNumber(rateIn?.value, CFG.minRate, CFG.maxRate, CFG.defaultRate);
+        const urlCheck = validateProductUrl(linkIn?.value || '');
+        const isFirstTen = Boolean(firstTen?.checked);
+
+        State.inputs.store = chosenStore;
+        State.inputs.usd = usd;
+        State.inputs.rate = rate;
+        State.inputs.link = urlCheck.value;
+        State.inputs.linkValid = urlCheck.ok;
+        State.inputs.firstTen = isFirstTen;
+
+        if (linkIn) linkIn.classList.toggle('invalid', !urlCheck.ok && !urlCheck.empty);
+        if (this.el.validationNote) this.el.validationNote.textContent = urlCheck.message;
+        if (this.el.vipSwitch) this.el.vipSwitch.classList.toggle('active', isFirstTen);
+
+        this.renderCalc();
+      };
+
+      [storeSel, usdIn, rateIn, linkIn, firstTen].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', syncAndRender);
+        el.addEventListener('change', syncAndRender);
+      });
+
+      syncAndRender();
+    },
+
+    renderCalc() {
+      const { usd, rate, firstTen } = State.inputs;
+      const feeUsd = firstTen ? 0 : usd * CFG.feePercent;
+      const productDzd = roundDZD(usd * rate);
+      const feeDzd = firstTen ? 0 : roundDZD(feeUsd * rate);
+      const totalDzd = productDzd + feeDzd;
+
+      setText('productDzdOut', `${fmtDZD.format(productDzd)} دج`);
+      setText('feeDzdOut', firstTen ? '0 دج (عرض 10)' : `${fmtDZD.format(feeDzd)} دج`);
+      setText('totalDzdOut', `${fmtDZD.format(totalDzd)} دج`);
+
+      const badge = this.el.commBadge;
+      if (badge) {
+        if (firstTen) {
+          badge.textContent = '0% عمولة • عرض الافتتاح';
+          badge.classList.add('free');
+        } else {
+          badge.textContent = 'عمولة 1$ / 10$';
+          badge.classList.remove('free');
+        }
+      }
+    },
+
     buildOrderSummary() {
       const { store, usd, rate, firstTen, link } = State.inputs;
       const feeUsd = firstTen ? 0 : usd * CFG.feePercent;
-      const totalDzd = roundDZD((usd + feeUsd) * rate);
+      const productDzd = roundDZD(usd * rate);
+      const feeDzd = firstTen ? 0 : roundDZD(feeUsd * rate);
+      const totalDzd = productDzd + feeDzd;
       const safeUrl = link || '(سأرسل الرابط هنا)';
 
       return [
@@ -383,124 +522,38 @@
       return copied;
     },
 
-    initStationChips() {
-      this.el.chips.forEach(ch => {
-        ch.addEventListener('click', () => {
-          const idx = Number(ch.dataset.station);
-          if (!Number.isInteger(idx) || idx < 0 || idx >= STATIONS.length) return;
-          State.activeStation = idx;
-          State.parcelProgress = STATIONS[idx].pos;
-          this.updateStationUI(idx);
-        });
-      });
-      this.updateStationUI(0);
-    },
-
-    initToggleAnim() {
-      const btn = this.el.toggleBtn;
-      if (!btn) return;
-      btn.addEventListener('click', () => {
-        State.animEnabled = !State.animEnabled;
-        btn.textContent = State.animEnabled ? 'إيقاف الحركة' : 'تشغيل الحركة';
-        btn.setAttribute('aria-pressed', String(State.animEnabled));
-      });
-    },
-
-    initCalculator() {
-      const { form, storeSel, usdIn, rateIn, linkIn, firstTen } = this.el;
-      if (form) form.addEventListener('submit', e => e.preventDefault());
-
-      const syncAndRender = () => {
-        const chosenStore = CFG.allowedStores.has(storeSel?.value) ? storeSel.value : 'AliExpress';
-        const usd = clampNumber(usdIn?.value, 0, CFG.maxUsd, CFG.defaultUsd);
-        const rate = clampNumber(rateIn?.value, CFG.minRate, CFG.maxRate, CFG.defaultRate);
-        const urlCheck = validateProductUrl(linkIn?.value || '');
-
-        State.inputs.store = chosenStore;
-        State.inputs.usd = usd;
-        State.inputs.rate = rate;
-        State.inputs.link = urlCheck.value;
-        State.inputs.linkValid = urlCheck.ok;
-        State.inputs.validationMsg = urlCheck.message;
-        State.inputs.firstTen = Boolean(firstTen?.checked);
-
-        if (linkIn) {
-          linkIn.classList.toggle('invalid', !urlCheck.ok && !urlCheck.empty);
-        }
-        if (this.el.validationNote) {
-          this.el.validationNote.textContent = urlCheck.message;
-        }
-
-        this.renderCalc();
-      };
-
-      [storeSel, usdIn, rateIn, linkIn, firstTen].forEach(el => {
-        if (!el) return;
-        el.addEventListener('input', syncAndRender);
-        el.addEventListener('change', syncAndRender);
-      });
-
-      syncAndRender();
-    },
-
-    renderCalc() {
-      const { usd, rate, firstTen } = State.inputs;
-      const feeUsd = firstTen ? 0 : usd * CFG.feePercent;
-      const productDzd = roundDZD(usd * rate);
-      const feeDzd = roundDZD(feeUsd * rate);
-      const totalDzd = productDzd + feeDzd;
-
-      setText('productDzdOut', `${fmtDZD.format(productDzd)} دج`);
-      setText('feeDzdOut', firstTen ? '0 دج (عرض 10)' : `${fmtDZD.format(feeDzd)} دج`);
-      setText('totalDzdOut', `${fmtDZD.format(totalDzd)} دج`);
-
-      const badge = this.el.commBadge;
-      if (badge) {
-        if (firstTen) {
-          badge.textContent = '0% عمولة • عرض الافتتاح';
-          badge.classList.add('free');
-        } else {
-          badge.textContent = 'عمولة 1$ / 10$';
-          badge.classList.remove('free');
-        }
-      }
-    },
-
     initCopy() {
-      const btn = this.el.copyBtn;
-      const directBtn = this.el.directContactBtn;
-      const pageLink = this.el.directPageLink;
-      const toast = this.el.toast;
-      if (!btn || !toast) return;
+      const { copyBtn, directContactBtn, directPageLink, toast } = this.el;
+      if (!copyBtn || !toast) return;
 
-      btn.addEventListener('click', async () => {
+      copyBtn.addEventListener('click', async () => {
         if (!State.inputs.linkValid) {
           this.showToast(toast, 'تحقق من صيغة الرابط أولاً قبل النسخ', true);
           this.el.linkIn?.focus();
           return;
         }
-
         const copied = await this.copyOrderText(this.buildOrderSummary());
-        if (copied) {
-          this.showToast(toast, 'تم نسخ تفاصيل الطلب بنجاح — الصقها في رسائل الصفحة', false);
-        } else {
-          this.showToast(toast, 'تعذر النسخ تلقائياً؛ يرجى تحديد النص ونسخه يدوياً', true);
-        }
+        this.showToast(
+          toast,
+          copied ? 'تم نسخ تفاصيل الطلب بنجاح — الصقها في رسائل الصفحة' : 'تعذر النسخ تلقائياً؛ يرجى النسخ يدوياً',
+          !copied
+        );
       });
 
-      if (directBtn && pageLink) {
-        directBtn.addEventListener('click', async () => {
+      if (directContactBtn && directPageLink) {
+        directContactBtn.addEventListener('click', async () => {
           if (!State.inputs.linkValid) {
-            this.showToast(toast, 'تحقق من صيغة الرابط أولاً قبل الانتقال للتواصل', true);
+            this.showToast(toast, 'تحقق من صيغة الرابط أولاً قبل الانتقال', true);
             this.el.linkIn?.focus();
             return;
           }
           const copied = await this.copyOrderText(this.buildOrderSummary());
-          const msg = copied
-            ? 'تم نسخ بطاقة الطلب — جاري فتح صفحة Commandili DZ للصقها في الخاص'
-            : 'جاري فتح صفحة Commandili DZ — انسخ تفاصيل طلبك يدوياً وأرسلها في الخاص';
-          this.showToast(toast, msg, !copied);
-          window.open(pageLink.href, '_blank', 'noopener,noreferrer');
+          this.showToast(
+            toast,
+            copied ? 'تم نسخ بطاقة الطلب — جاري فتح صفحة Commandili DZ' : 'جاري فتح الصفحة — انسخ تفاصيل طلبك وأرسلها في الخاص',
+            !copied
+          );
+          window.open(directPageLink.href, '_blank', 'noopener,noreferrer');
         });
       }
     },
@@ -528,11 +581,12 @@
 
     initAll() {
       this.cache();
-      this.initStationChips();
+      this.initStationControls();
       this.initToggleAnim();
       this.initCalculator();
       this.initCopy();
       this.initFaq();
+      this.loadDailyRate();
     }
   };
 
@@ -548,4 +602,3 @@
     init();
   }
 })();
-                                   
